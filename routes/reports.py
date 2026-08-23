@@ -12,6 +12,7 @@ reports_bp = Blueprint('reports', __name__)
 
 
 @reports_bp.route('/reports')
+@reports_bp.route('/exported-reports')
 @login_required
 def index():
     """Renders the reports / scan history index."""

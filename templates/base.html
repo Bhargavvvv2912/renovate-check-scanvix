@@ -21,7 +21,16 @@
     <div class="app-container">
         {% if current_user and current_user.is_authenticated %}
         <!-- Sidebar Navigation -->
-        <aside class="sidebar">
+        <aside class="sidebar" id="appSidebar">
+            <script>
+                (function() {
+                    try {
+                        if (localStorage.getItem('sidebar-collapsed') === 'true' && window.innerWidth > 992) {
+                            document.getElementById('appSidebar').classList.add('collapsed');
+                        }
+                    } catch (e) {}
+                })();
+            </script>
             <div class="sidebar-brand">
                 <div class="brand-icon">
                     <i class="fa-solid fa-shield-halved"></i>
@@ -37,31 +46,31 @@
                 <div class="sidebar-section-title">SCANNING</div>
                 <ul class="sidebar-nav">
                     <li>
-                        <a class="sidebar-nav-link {% if request.path == '/' %}active{% endif %}" href="{{ url_for('dashboard.index') }}">
+                        <a class="sidebar-nav-link {% if request.path == '/' or request.path == '/dashboard' %}active{% endif %}" {% if request.path == '/' or request.path == '/dashboard' %}aria-current="page"{% endif %} href="{{ url_for('dashboard.index') }}" title="Dashboard">
                             <i class="fa-solid fa-table-cells-large"></i>
                             <span>Dashboard</span>
                         </a>
                     </li>
                     <li>
-                        <a class="sidebar-nav-link {% if request.path == '/scan/new' %}active{% endif %}" href="{{ url_for('scans.new_scan') }}">
+                        <a class="sidebar-nav-link {% if request.path == '/scan/new' %}active{% endif %}" {% if request.path == '/scan/new' %}aria-current="page"{% endif %} href="{{ url_for('scans.new_scan') }}" title="New Scan">
                             <i class="fa-regular fa-circle-play"></i>
                             <span>New Scan</span>
                         </a>
                     </li>
                     <li>
-                        <a class="sidebar-nav-link {% if request.path.startswith('/scan/progress') %}active{% endif %}" href="{{ url_for('scans.scan_history') }}">
+                        <a class="sidebar-nav-link {% if request.path.startswith('/scan/progress') %}active{% endif %}" {% if request.path.startswith('/scan/progress') %}aria-current="page"{% endif %} href="{{ url_for('scans.scan_history') }}" title="Scan Progress">
                             <i class="fa-regular fa-clock"></i>
                             <span>Scan Progress</span>
                         </a>
                     </li>
                     <li>
-                        <a class="sidebar-nav-link {% if request.path.startswith('/scan/results') %}active{% endif %}" href="{{ url_for('scans.scan_history') }}">
+                        <a class="sidebar-nav-link {% if request.path.startswith('/scan/results') %}active{% endif %}" {% if request.path.startswith('/scan/results') %}aria-current="page"{% endif %} href="{{ url_for('scans.scan_history') }}" title="Scan Results">
                             <i class="fa-solid fa-table-list"></i>
                             <span>Scan Results</span>
                         </a>
                     </li>
                     <li>
-                        <a class="sidebar-nav-link {% if request.path == '/scan/history' %}active{% endif %}" href="{{ url_for('scans.scan_history') }}">
+                        <a class="sidebar-nav-link {% if request.path == '/scan/history' %}active{% endif %}" {% if request.path == '/scan/history' %}aria-current="page"{% endif %} href="{{ url_for('scans.scan_history') }}" title="Scan History">
                             <i class="fa-solid fa-clock-rotate-left"></i>
                             <span>Scan History</span>
                         </a>
@@ -72,25 +81,25 @@
                 <div class="sidebar-section-title">ANALYSIS</div>
                 <ul class="sidebar-nav">
                     <li>
-                        <a class="sidebar-nav-link {% if request.path == '/findings' %}active{% endif %}" href="{{ url_for('findings.index') }}">
+                        <a class="sidebar-nav-link {% if request.path == '/findings' %}active{% endif %}" {% if request.path == '/findings' %}aria-current="page"{% endif %} href="{{ url_for('findings.index') }}" title="Findings">
                             <i class="fa-solid fa-shield-virus"></i>
                             <span>Findings</span>
                         </a>
                     </li>
                     <li>
-                        <a class="sidebar-nav-link {% if request.path == '/hosts' %}active{% endif %}" href="{{ url_for('dashboard.hosts') }}">
+                        <a class="sidebar-nav-link {% if request.path == '/hosts' %}active{% endif %}" {% if request.path == '/hosts' %}aria-current="page"{% endif %} href="{{ url_for('dashboard.hosts') }}" title="Hosts">
                             <i class="fa-solid fa-desktop"></i>
                             <span>Hosts</span>
                         </a>
                     </li>
                     <li>
-                        <a class="sidebar-nav-link {% if request.path == '/services' %}active{% endif %}" href="{{ url_for('dashboard.services_list') }}">
+                        <a class="sidebar-nav-link {% if request.path == '/services' %}active{% endif %}" {% if request.path == '/services' %}aria-current="page"{% endif %} href="{{ url_for('dashboard.services_list') }}" title="Services">
                             <i class="fa-solid fa-layer-group"></i>
                             <span>Services</span>
                         </a>
                     </li>
                     <li>
-                        <a class="sidebar-nav-link {% if request.path == '/nse-scripts' %}active{% endif %}" href="{{ url_for('dashboard.nse_scripts_list') }}">
+                        <a class="sidebar-nav-link {% if request.path == '/nse-scripts' %}active{% endif %}" {% if request.path == '/nse-scripts' %}aria-current="page"{% endif %} href="{{ url_for('dashboard.nse_scripts_list') }}" title="NSE Scripts">
                             <i class="fa-solid fa-code"></i>
                             <span>NSE Scripts</span>
                         </a>
@@ -101,13 +110,13 @@
                 <div class="sidebar-section-title">REPORTS</div>
                 <ul class="sidebar-nav">
                     <li>
-                        <a class="sidebar-nav-link {% if request.path == '/reports' or request.path.startswith('/report/') %}active{% endif %}" href="{{ url_for('reports.index') }}">
+                        <a class="sidebar-nav-link {% if request.path == '/reports' or (request.path.startswith('/report/') and not request.path.startswith('/report/exported')) %}active{% endif %}" {% if request.path == '/reports' or (request.path.startswith('/report/') and not request.path.startswith('/report/exported')) %}aria-current="page"{% endif %} href="{{ url_for('reports.index') }}" title="Reports">
                             <i class="fa-regular fa-file-lines"></i>
                             <span>Reports</span>
                         </a>
                     </li>
                     <li>
-                        <a class="sidebar-nav-link" href="{{ url_for('reports.index') }}">
+                        <a class="sidebar-nav-link {% if request.path == '/exported-reports' %}active{% endif %}" {% if request.path == '/exported-reports' %}aria-current="page"{% endif %} href="/exported-reports" title="Exported Reports">
                             <i class="fa-solid fa-file-export"></i>
                             <span>Exported Reports</span>
                         </a>
@@ -118,13 +127,13 @@
                 <div class="sidebar-section-title">SYSTEM</div>
                 <ul class="sidebar-nav">
                     <li>
-                        <a class="sidebar-nav-link {% if request.path == '/settings' %}active{% endif %}" href="{{ url_for('dashboard.settings') }}">
+                        <a class="sidebar-nav-link {% if request.path == '/settings' %}active{% endif %}" {% if request.path == '/settings' %}aria-current="page"{% endif %} href="{{ url_for('dashboard.settings') }}" title="Settings">
                             <i class="fa-solid fa-gear"></i>
                             <span>Settings</span>
                         </a>
                     </li>
                     <li>
-                        <a class="sidebar-nav-link {% if request.path == '/about' %}active{% endif %}" href="{{ url_for('dashboard.about') }}">
+                        <a class="sidebar-nav-link {% if request.path == '/about' %}active{% endif %}" {% if request.path == '/about' %}aria-current="page"{% endif %} href="{{ url_for('dashboard.about') }}" title="About">
                             <i class="fa-regular fa-circle-question"></i>
                             <span>About</span>
                         </a>

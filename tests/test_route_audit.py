@@ -83,3 +83,23 @@ def test_security_headers_present(client):
     assert resp.headers.get('Referrer-Policy') == 'strict-origin-when-cross-origin'
     assert 'Content-Security-Policy' in resp.headers
 
+
+def test_sidebar_and_exported_reports(client, auth_user):
+    """Verify sidebar layout, toggle button accessibility, and exported reports page route."""
+    client.post('/login', data={
+        'username': 'testadmin',
+        'password': 'SecretPassword123!'
+    })
+
+    # Test that /exported-reports resolves successfully
+    resp = client.get('/exported-reports')
+    assert resp.status_code == 200
+    html = resp.data.decode('utf-8')
+
+    # Check for sidebar elements and accessibility properties
+    assert 'id="appSidebar"' in html
+    assert 'aria-label="Toggle Sidebar Navigation"' in html
+    assert 'title="Exported Reports"' in html
+    assert 'title="Dashboard"' in html
+
+

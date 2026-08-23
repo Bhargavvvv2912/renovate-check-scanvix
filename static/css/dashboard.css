@@ -1113,3 +1113,45 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* Collapsed Sidebar State Rules (Desktop only, screen width > 992px) */
+@media (min-width: 993px) {
+  .sidebar {
+    transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .sidebar.collapsed {
+    width: 72px;
+  }
+  
+  /* Hide Brand details */
+  .sidebar.collapsed .brand-title {
+    display: none !important;
+  }
+  .sidebar.collapsed .sidebar-brand {
+    justify-content: center;
+    padding: 22px 0 18px;
+  }
+  
+  /* Hide navigation labels and section titles */
+  .sidebar.collapsed .sidebar-section-title {
+    display: none !important;
+  }
+  .sidebar.collapsed .sidebar-nav-link span {
+    display: none !important;
+  }
+  .sidebar.collapsed .sidebar-nav-link {
+    justify-content: center;
+    padding: 10px 0;
+    gap: 0;
+  }
+  .sidebar.collapsed .sidebar-nav-link i {
+    font-size: 1.15rem;
+    width: auto;
+    margin: 0;
+  }
+  
+  /* Hide System Status Card */
+  .sidebar.collapsed .sidebar-status-card {
+    display: none !important;
+  }
+}

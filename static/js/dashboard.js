@@ -45,20 +45,79 @@ document.addEventListener('DOMContentLoaded', function () {
     window.DashboardCharts.initScanActivityChart('chartScanActivity', activityData);
   }
 
-  // 3. Sidebar Toggle for Mobile / Small Screens
+  // 3. Sidebar Toggle for Desktop and Mobile
   const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
-  const sidebar = document.querySelector('.sidebar');
+  const sidebar = document.getElementById('appSidebar');
 
   if (sidebarToggleBtn && sidebar) {
     sidebarToggleBtn.addEventListener('click', function (e) {
       e.stopPropagation();
-      sidebar.classList.toggle('show');
+      if (window.innerWidth <= 992) {
+        sidebar.classList.toggle('show');
+      } else {
+        const isCollapsed = sidebar.classList.toggle('collapsed');
+        localStorage.setItem('sidebar-collapsed', isCollapsed);
+      }
     });
 
     document.addEventListener('click', function (e) {
       if (window.innerWidth <= 992 && !sidebar.contains(e.target) && !sidebarToggleBtn.contains(e.target)) {
         sidebar.classList.remove('show');
       }
+    });
+  }
+
+  // Highlight active sidebar link based on current path (supporting nested routes and custom exported-reports path)
+  function highlightActiveSidebarLink() {
+    const pathname = window.location.pathname;
+    const links = document.querySelectorAll('.sidebar-nav-link');
+    links.forEach(link => {
+      const hrefAttr = link.getAttribute('href');
+      if (!hrefAttr) return;
+
+      let linkPath = '';
+      try {
+        linkPath = new URL(hrefAttr, window.location.origin).pathname;
+      } catch (err) {
+        linkPath = hrefAttr;
+      }
+
+      let isActive = false;
+      if (linkPath === '/' || linkPath === '/dashboard') {
+        isActive = (pathname === '/' || pathname === '/dashboard');
+      } else if (linkPath === '/exported-reports') {
+        isActive = (pathname === '/exported-reports');
+      } else if (linkPath === '/reports') {
+        isActive = (pathname === '/reports' || (pathname.startsWith('/report/') && !pathname.startsWith('/report/exported')));
+      } else if (linkPath === '/scan/history') {
+        // Exclude results/progress paths from history highlight
+        isActive = (pathname === '/scan/history' || pathname === '/history');
+      } else if (linkPath && linkPath !== '#') {
+        isActive = pathname.startsWith(linkPath);
+      }
+
+      if (isActive) {
+        link.classList.add('active');
+        link.setAttribute('aria-current', 'page');
+      } else {
+        link.classList.remove('active');
+        link.removeAttribute('aria-current');
+      }
+    });
+  }
+  
+  highlightActiveSidebarLink();
+  window.addEventListener('popstate', highlightActiveSidebarLink);
+
+  // Preserve sidebar scroll position
+  const menuWrapper = document.querySelector('.sidebar-menu-wrapper');
+  if (menuWrapper) {
+    const savedScrollTop = sessionStorage.getItem('sidebar-scroll-top');
+    if (savedScrollTop !== null) {
+      menuWrapper.scrollTop = parseInt(savedScrollTop, 10);
+    }
+    menuWrapper.addEventListener('scroll', function () {
+      sessionStorage.setItem('sidebar-scroll-top', menuWrapper.scrollTop);
     });
   }
 
@@ -79,7 +138,6 @@ document.addEventListener('DOMContentLoaded', function () {
   timeFilters.forEach(select => {
     select.addEventListener('change', function () {
       const period = this.value;
-      // In production, this can trigger dynamic chart dataset updates via fetch('/api/dashboard/stats?period=' + period)
       console.log(`Filtering dashboard charts for period: ${period}`);
     });
   });
