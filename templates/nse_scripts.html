@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}NSE Script Library — NMAP Security Suite{% endblock %}
+{% block page_title %}Nmap Scripting Engine (NSE) Registry{% endblock %}
+{% block page_subtitle %}Predefined information gathering scripts authorized for educational laboratory environments{% endblock %}
+
+{% block content %}
+<div class="alert alert-light border border-primary-subtle p-3 mb-4 d-flex align-items-center gap-3">
+    <i class="fa-solid fa-circle-info text-primary fa-xl"></i>
+    <div class="fs-8 text-secondary">
+        <strong>Predefined Script Selection Policy:</strong> For security and laboratory safety compliance, manual scripting arguments or arbitrary NSE script executions are disabled. The execution engine automatically runs matching allowlisted information-gathering scripts when appropriate services (like HTTP, HTTPS, or SSH) are detected on scanned targets.
+    </div>
+</div>
+
+<div class="card-saas p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0 text-dark fs-7">
+            <i class="fa-solid fa-code text-primary me-2"></i> Allowlisted NSE Script Library
+        </h5>
+        <span class="badge bg-primary-soft text-primary font-monospace">{{ library|length }} Approved Scripts</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table-saas-clean mb-0">
+            <thead>
+                <tr>
+                    <th>Script ID</th>
+                    <th>Target Service</th>
+                    <th>Category</th>
+                    <th>Risk Rating</th>
+                    <th>Policy Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for script_id, s in library.items() %}
+                <tr style="cursor: pointer;" onclick="showScriptDetails({{ s | tojson | forceescape }})">
+                    <td class="fw-bold font-monospace text-primary">{{ s.script_id }}</td>
+                    <td><span class="badge bg-light text-secondary font-monospace">{{ s.service }}</span></td>
+                    <td class="text-dark">{{ s.category }}</td>
+                    <td><span class="badge bg-success-soft text-success">{{ s.risk }}</span></td>
+                    <td><span class="badge bg-success text-white"><i class="fa-solid fa-check me-1"></i> Approved</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary py-0 px-2 fs-9">
+                            <i class="fa-solid fa-magnifying-glass"></i> Details
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Script Details Modal -->
+<div class="modal fade" id="scriptDetailsModal" tabindex="-1" aria-labelledby="scriptDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title fw-bold text-dark fs-6" id="scriptDetailsModalLabel">
+                    <i class="fa-solid fa-code text-primary me-2"></i> Script Metadata Viewer
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="text-center mb-3">
+                    <h4 class="text-primary font-monospace fw-bold mb-1" id="modal-script-id">http-title</h4>
+                    <span class="badge bg-success-soft text-success fs-9"><i class="fa-solid fa-check me-1"></i> Approved for Lab</span>
+                </div>
+                
+                <div class="mb-4">
+                    <h6 class="fw-bold text-dark fs-8 mb-1">Description:</h6>
+                    <p class="text-secondary fs-8 mb-0" id="modal-script-desc">Retrieves the title of an HTTP service.</p>
+                </div>
+
+                <table class="table table-bordered align-middle fs-8 mb-0">
+                    <tbody>
+                        <tr>
+                            <td class="fw-semibold text-secondary w-35">Target Service:</td>
+                            <td class="font-monospace text-dark" id="modal-script-service">HTTP / HTTPS</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-semibold text-secondary">NSE Category:</td>
+                            <td class="text-dark" id="modal-script-cat">Information Gathering</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-semibold text-secondary">Execution Trigger:</td>
+                            <td class="text-secondary fs-9" id="modal-script-trigger">Automatically selected when matching service is detected.</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-semibold text-secondary">Safety Risk:</td>
+                            <td><span class="badge bg-success-soft text-success" id="modal-script-risk">Low Risk</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let scriptDetailsModalObj = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        scriptDetailsModalObj = new bootstrap.Modal(document.getElementById('scriptDetailsModal'));
+    });
+
+    function showScriptDetails(script) {
+        document.getElementById('modal-script-id').innerText = script.script_id;
+        document.getElementById('modal-script-desc').innerText = script.description;
+        document.getElementById('modal-script-service').innerText = script.service;
+        document.getElementById('modal-script-cat').innerText = script.category;
+        document.getElementById('modal-script-risk').innerText = `${script.risk} Safety Risk`;
+        
+        let triggerText = '';
+        if (script.script_id.startsWith('http')) {
+            triggerText = 'Automatically selected and executed when HTTP or HTTPS service is observed on any open port.';
+        } else if (script.script_id.startsWith('ssh')) {
+            triggerText = 'Automatically selected and executed when SSH service is observed on any open port.';
+        } else {
+            triggerText = 'Triggered when matching services are detected.';
+        }
+        document.getElementById('modal-script-trigger').innerText = triggerText;
+
+        scriptDetailsModalObj.show();
+    }
+</script>
+{% endblock %}

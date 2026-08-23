@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Settings & Lab Boundaries — NMAP Security Suite{% endblock %}
+{% block page_title %}Laboratory Settings & Safety Boundaries{% endblock %}
+{% block page_subtitle %}Configured target allowlists, network policies, and scanning boundary limits{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Allowed Targets & Boundaries -->
+    <div class="col-lg-7">
+        <div class="card-saas p-4 mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0" style="color: var(--text-main); font-size: 1rem;">
+                    <i class="fa-solid fa-shield-halved text-primary me-2"></i> Configured Authorized Targets
+                </h5>
+                <span class="badge-authorized-lab">
+                    <i class="fa-solid fa-lock"></i> Strict Lab Boundary
+                </span>
+            </div>
+            <p class="text-secondary fs-8">
+                Target validation only authorizes addresses explicitly configured in the laboratory allowlist or permitted by private subnet boundaries.
+            </p>
+
+            <div class="table-responsive">
+                <table class="table-saas-clean mb-0">
+                    <thead>
+                        <tr>
+                            <th>Authorized Target</th>
+                            <th>Type</th>
+                            <th>Policy Status</th>
+                            <th>Access Scope</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for target in allowed_targets %}
+                        <tr>
+                            <td>
+                                <div class="target-cell">
+                                    <i class="fa-solid fa-{% if target in ['127.0.0.1', '::1', 'localhost'] %}server{% else %}desktop{% endif %} text-muted fs-8"></i>
+                                    <span>{{ target }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-secondary font-monospace">
+                                    {% if ':' in target %}IPv6{% elif '.' in target and not target.endswith('.local') %}IPv4{% else %}Hostname{% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge-status-completed">Authorized</span>
+                            </td>
+                            <td class="text-secondary fs-8">
+                                {% if target in ['127.0.0.1', '::1', 'localhost'] %}
+                                Loopback Laboratory
+                                {% else %}
+                                Isolated Lab Subnet
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card-saas p-4">
+            <h5 class="fw-bold mb-3" style="color: var(--text-main); font-size: 1rem;">
+                <i class="fa-solid fa-sliders text-primary me-2"></i> Active Network Boundary Policies
+            </h5>
+            <div class="d-flex flex-column gap-3">
+                <div class="d-flex justify-content-between align-items-center p-3 rounded border bg-light">
+                    <div>
+                        <strong class="d-block text-dark fs-8">RFC 1918 Private Subnet Scans</strong>
+                        <span class="text-secondary fs-9">Allows 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16</span>
+                    </div>
+                    <span class="badge bg-success-soft text-success fw-bold">ENABLED</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center p-3 rounded border bg-light">
+                    <div>
+                        <strong class="d-block text-dark fs-8">Localhost Loopback Scans</strong>
+                        <span class="text-secondary fs-9">Allows 127.0.0.1 and ::1 local host targets</span>
+                    </div>
+                    <span class="badge bg-success-soft text-success fw-bold">ENABLED</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center p-3 rounded border bg-light">
+                    <div>
+                        <strong class="d-block text-dark fs-8">Public Internet Outbound Scans</strong>
+                        <span class="text-secondary fs-9">Strictly block non-whitelisted public IPs</span>
+                    </div>
+                    <span class="badge bg-danger-soft text-danger fw-bold">BLOCKED</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security & Protection Rules -->
+    <div class="col-lg-5">
+        <div class="card-saas p-4 mb-4">
+            <h5 class="fw-bold mb-3" style="color: var(--text-main); font-size: 1rem;">
+                <i class="fa-solid fa-user-shield text-success me-2"></i> Auditor Environment
+            </h5>
+            <table class="table table-borderless text-secondary mb-0 align-middle fs-8">
+                <tbody>
+                    <tr>
+                        <td class="ps-0">Authenticated Auditor:</td>
+                        <td class="text-dark fw-bold text-end">{{ current_user.username }}</td>
+                    </tr>
+                    <tr>
+                        <td class="ps-0">CSRF Protection:</td>
+                        <td class="text-end"><span class="badge-status-completed">Active (Flask-WTF)</span></td>
+                    </tr>
+                    <tr>
+                        <td class="ps-0">Session Security:</td>
+                        <td class="text-end text-dark fw-semibold">HTTPOnly / SameSite=Lax</td>
+                    </tr>
+                    <tr>
+                        <td class="ps-0">Injection Filter:</td>
+                        <td class="text-end text-dark fw-semibold">Strict Metacharacter Regex</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card-saas p-4">
+            <h5 class="fw-bold mb-3" style="color: var(--text-main); font-size: 1rem;">
+                <i class="fa-solid fa-code text-primary me-2"></i> Validator Module API
+            </h5>
+            <p class="text-secondary fs-8">
+                The target validation engine operates via <code>POST /api/validate-target</code> and performs syntax parsing, normalization, and safety policy checks.
+            </p>
+            <div class="p-3 bg-light rounded border font-monospace fs-9 text-dark">
+                POST /api/validate-target<br>
+                Payload: {"target": "192.168.56.20"}<br>
+                Response: {"valid": true, "authorized": true}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

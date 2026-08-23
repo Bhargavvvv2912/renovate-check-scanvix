@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Login — NMAP Security Suite{% endblock %}
+{% block page_title %}Security Portal Authentication{% endblock %}
+{% block page_subtitle %}Authenticate session to access the laboratory security suite{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <div class="text-center mb-4">
+            <div class="auth-logo-badge">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <h3 class="fw-bold mb-1" style="color: var(--text-main);">Security Portal Authentication</h3>
+            <p class="text-secondary fs-8">Authenticate registered credentials to unlock the security dashboard.</p>
+        </div>
+        
+        <form action="{{ url_for('auth.login', next=request.args.get('next')) }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <div class="mb-3">
+                <label for="username" class="form-label">Auditor Username</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0 text-muted"><i class="fa-solid fa-user"></i></span>
+                    <input type="text" class="form-control border-start-0" id="username" name="username" placeholder="e.g. admin" required autofocus>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <label for="password" class="form-label">Portal Password</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0 text-muted"><i class="fa-solid fa-key"></i></span>
+                    <input type="password" class="form-control border-start-0" id="password" name="password" placeholder="••••••••" required>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+                <i class="fa-solid fa-unlock-keyhole me-2"></i> Authenticate Session
+            </button>
+        </form>
+
+        <div class="mt-4 pt-3 border-top text-center">
+            <span class="badge-authorized-lab">
+                <i class="fa-solid fa-shield-check"></i>
+                <span>Authorized Educational Laboratory Only</span>
+            </span>
+        </div>
+    </div>
+</div>
+{% endblock %}

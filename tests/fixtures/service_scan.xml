@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE nmaprun>
+<nmaprun scanner="nmap" args="nmap -sV -O 192.168.56.20" start="1718010000" startstr="Mon Jun 10 10:30:00 2024" version="7.94" xmloutputversion="1.05">
+<scaninfo type="syn" protocol="tcp" numservices="1000" services="1-1000"/>
+<host starttime="1718010000" endtime="1718010035">
+<status state="up" reason="echo-reply" reason_ttl="64"/>
+<address addr="192.168.56.20" addrtype="ipv4"/>
+<hostnames>
+<hostname name="ubuntu-target.local" type="user"/>
+</hostnames>
+<ports>
+<port protocol="tcp" portid="22">
+<state state="open" reason="syn-ack" reason_ttl="64"/>
+<service name="ssh" product="OpenSSH" version="8.2p1 Ubuntu 4ubuntu0.5" extrainfo="Ubuntu Linux; protocol 2.0" method="probed" conf="10"/>
+</port>
+<port protocol="tcp" portid="80">
+<state state="open" reason="syn-ack" reason_ttl="64"/>
+<service name="http" product="Apache httpd" version="2.4.41" extrainfo="(Ubuntu)" method="probed" conf="10"/>
+</port>
+<port protocol="tcp" portid="3306">
+<state state="open" reason="syn-ack" reason_ttl="64"/>
+<service name="mysql" product="MySQL" version="8.0.35" extrainfo="MySQL Community Server - GPL" method="probed" conf="10"/>
+</port>
+</ports>
+<os>
+<portused state="open" proto="tcp" portid="22"/>
+<osmatch name="Linux 5.4 - 5.15" accuracy="96" line="68000">
+<osclass type="general purpose" vendor="Linux" osfamily="Linux" osgen="5.X" accuracy="96"/>
+</osmatch>
+</os>
+</host>
+<runstats>
+<finished time="1718010035" timestr="Mon Jun 10 10:30:35 2024" elapsed="35.00" summary="Nmap done: 1 IP address (1 host up) scanned in 35.00 seconds" exit="success"/>
+<hosts up="1" down="0" total="1"/>
+</runstats>
+</nmaprun>

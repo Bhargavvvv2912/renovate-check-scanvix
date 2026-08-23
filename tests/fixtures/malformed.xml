@@ -1,0 +1,4 @@
+<nmaprun scanner="nmap" version="7.94">
+<host>
+<address addr="192.168.1.1"
+<!-- Incomplete / truncated XML without closing tags -->

@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Hosts Inventory — NMAP Security Suite{% endblock %}
+{% block page_title %}Network Hosts Inventory{% endblock %}
+{% block page_subtitle %}Discovered active targets, IP addresses, hostnames and OS fingerprints{% endblock %}
+
+{% block content %}
+<div class="card-saas p-4 mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h5 class="fw-bold mb-0 text-dark fs-7">
+                <i class="fa-solid fa-desktop text-primary me-2"></i> Discovered Network Targets
+            </h5>
+            <span class="text-secondary fs-8">Inventory of hosts discovered across all scan executions</span>
+        </div>
+        <div class="w-auto">
+            <input type="text" id="global-host-search" class="form-control form-control-sm" placeholder="Search IP, Hostname, OS..." style="min-width: 250px;">
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table-saas-clean mb-0" id="global-hosts-table">
+            <thead>
+                <tr>
+                    <th>IP Address</th>
+                    <th>Hostname</th>
+                    <th>Status</th>
+                    <th>OS Detection</th>
+                    <th>Scan Target ID</th>
+                    <th>Open Ports</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for host in hosts %}
+                <tr class="global-host-row">
+                    <td class="fw-bold font-monospace text-primary">{{ host.ip_address }}</td>
+                    <td class="text-dark">{{ host.hostname if host.hostname else '—' }}</td>
+                    <td>
+                        {% if host.state == 'up' %}
+                        <span class="badge bg-success-soft text-success">Up</span>
+                        {% else %}
+                        <span class="badge bg-secondary-soft text-secondary">{{ host.state.capitalize() }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-secondary fs-8">
+                        {% if host.os_information %}
+                        <i class="fa-solid fa-microchip me-1 text-primary"></i> {{ host.os_information }}
+                        {% else %}
+                        <span class="text-muted">Not available</span>
+                        {% endif %}
+                    </td>
+                    <td class="font-monospace text-secondary fs-8">Scan #{{ host.scan_id }}</td>
+                    <td class="fw-semibold text-dark">{{ host.ports|length }} Ports</td>
+                    <td>
+                        <a href="{{ url_for('scans.scan_results', scan_id=host.scan_id) }}" class="btn btn-sm btn-outline-primary py-0 px-2 fs-9">
+                            <i class="fa-solid fa-table-list"></i> Scan Results
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-5">
+                        <i class="fa-solid fa-desktop fa-2x mb-3 text-muted"></i>
+                        <p class="mb-0">No discovered hosts in database. Run a scan to discover network targets.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('global-host-search')?.addEventListener('keyup', function() {
+        const q = this.value.toLowerCase().trim();
+        const rows = document.querySelectorAll('#global-hosts-table tbody .global-host-row');
+        rows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            row.style.display = (!q || text.includes(q)) ? '' : 'none';
+        });
+    });
+</script>
+{% endblock %}

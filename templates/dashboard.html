@@ -1,0 +1,443 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard — NMAP Security Suite{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}Overview of your network security environment{% endblock %}
+
+{% block content %}
+<!-- Initial Data Injection for Client-Side Charts -->
+<script>
+    window.INITIAL_DASHBOARD_DATA = {{ data | tojson }};
+</script>
+
+<!-- =========================================================================
+     1. Six KPI Cards Row with Sparklines
+     ========================================================================= -->
+<section class="kpi-grid" aria-label="Key Performance Indicators">
+    <!-- 1. Total Scans -->
+    <div class="kpi-card">
+        <div class="kpi-top-row">
+            <div class="kpi-icon-squircle kpi-icon-blue">
+                <i class="fa-solid fa-crosshairs"></i>
+            </div>
+            <div class="kpi-meta-block">
+                <span class="kpi-label">Total Scans</span>
+                <span class="kpi-value">{{ data.kpi.total_scans }}</span>
+                <span class="kpi-trend trend-up"><i class="fa-solid fa-arrow-up"></i> 26% from last month</span>
+            </div>
+        </div>
+        <div class="kpi-sparkline-container">
+            <canvas id="sparklineTotalScans"></canvas>
+        </div>
+    </div>
+
+    <!-- 2. Hosts Scanned -->
+    <div class="kpi-card">
+        <div class="kpi-top-row">
+            <div class="kpi-icon-squircle kpi-icon-cyan">
+                <i class="fa-solid fa-desktop"></i>
+            </div>
+            <div class="kpi-meta-block">
+                <span class="kpi-label">Hosts Scanned</span>
+                <span class="kpi-value">{{ data.kpi.hosts_scanned }}</span>
+                <span class="kpi-trend trend-up"><i class="fa-solid fa-arrow-up"></i> 18% from last month</span>
+            </div>
+        </div>
+        <div class="kpi-sparkline-container">
+            <canvas id="sparklineHostsScanned"></canvas>
+        </div>
+    </div>
+
+    <!-- 3. Open Ports -->
+    <div class="kpi-card">
+        <div class="kpi-top-row">
+            <div class="kpi-icon-squircle kpi-icon-orange">
+                <i class="fa-solid fa-network-wired"></i>
+            </div>
+            <div class="kpi-meta-block">
+                <span class="kpi-label">Open Ports</span>
+                <span class="kpi-value">{{ data.kpi.open_ports }}</span>
+                <span class="kpi-trend trend-up"><i class="fa-solid fa-arrow-up"></i> 32% from last month</span>
+            </div>
+        </div>
+        <div class="kpi-sparkline-container">
+            <canvas id="sparklineOpenPorts"></canvas>
+        </div>
+    </div>
+
+    <!-- 4. Services Detected -->
+    <div class="kpi-card">
+        <div class="kpi-top-row">
+            <div class="kpi-icon-squircle kpi-icon-green">
+                <i class="fa-solid fa-layer-group"></i>
+            </div>
+            <div class="kpi-meta-block">
+                <span class="kpi-label">Services Detected</span>
+                <span class="kpi-value">{{ data.kpi.services_detected }}</span>
+                <span class="kpi-trend trend-up"><i class="fa-solid fa-arrow-up"></i> 21% from last month</span>
+            </div>
+        </div>
+        <div class="kpi-sparkline-container">
+            <canvas id="sparklineServicesDetected"></canvas>
+        </div>
+    </div>
+
+    <!-- 5. Security Findings -->
+    <div class="kpi-card">
+        <div class="kpi-top-row">
+            <div class="kpi-icon-squircle kpi-icon-red">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <div class="kpi-meta-block">
+                <span class="kpi-label">Security Findings</span>
+                <span class="kpi-value">{{ data.kpi.security_findings }}</span>
+                <span class="kpi-trend trend-down"><i class="fa-solid fa-arrow-down"></i> 12% from last month</span>
+            </div>
+        </div>
+        <div class="kpi-sparkline-container">
+            <canvas id="sparklineSecurityFindings"></canvas>
+        </div>
+    </div>
+
+    <!-- 6. Success Rate -->
+    <div class="kpi-card">
+        <div class="kpi-top-row">
+            <div class="kpi-icon-squircle kpi-icon-blue">
+                <i class="fa-solid fa-shield-check"></i>
+            </div>
+            <div class="kpi-meta-block">
+                <span class="kpi-label">Success Rate</span>
+                <span class="kpi-value">{{ data.kpi.success_rate }}</span>
+                <span class="kpi-trend trend-up"><i class="fa-solid fa-arrow-up"></i> 8% from last month</span>
+            </div>
+        </div>
+        <div class="kpi-sparkline-container">
+            <canvas id="sparklineSuccessRate"></canvas>
+        </div>
+    </div>
+</section>
+
+<!-- =========================================================================
+     2. Three Visual Analytics Charts Row
+     ========================================================================= -->
+<section class="charts-grid" aria-label="Visual Analytics Charts">
+    <!-- Chart 1: Findings by Severity -->
+    <div class="card-saas">
+        <div class="card-header-flex">
+            <h2 class="card-header-title">Findings by Severity</h2>
+            <select class="select-time-filter" aria-label="Time period filter">
+                <option value="month">This Month</option>
+                <option value="week">Last 7 Days</option>
+                <option value="year">All Time</option>
+            </select>
+        </div>
+        <div class="chart-doughnut-layout">
+            <div class="chart-doughnut-wrapper">
+                <canvas id="chartFindingsSeverity"></canvas>
+            </div>
+            <div class="chart-custom-legend">
+                <div class="legend-item-row">
+                    <div class="legend-left">
+                        <span class="legend-dot" style="background-color: #EF4444;"></span>
+                        <span>High</span>
+                    </div>
+                    <div>
+                        <span class="legend-val">{{ data.findings_severity.high }}</span>
+                        <span class="legend-pct">({% if data.findings_severity.total > 0 %}{{ '%.1f'|format((data.findings_severity.high / data.findings_severity.total) * 100) }}%{% else %}0%{% endif %})</span>
+                    </div>
+                </div>
+                <div class="legend-item-row">
+                    <div class="legend-left">
+                        <span class="legend-dot" style="background-color: #F59E0B;"></span>
+                        <span>Medium</span>
+                    </div>
+                    <div>
+                        <span class="legend-val">{{ data.findings_severity.medium }}</span>
+                        <span class="legend-pct">({% if data.findings_severity.total > 0 %}{{ '%.1f'|format((data.findings_severity.medium / data.findings_severity.total) * 100) }}%{% else %}0%{% endif %})</span>
+                    </div>
+                </div>
+                <div class="legend-item-row">
+                    <div class="legend-left">
+                        <span class="legend-dot" style="background-color: #EAB308;"></span>
+                        <span>Low</span>
+                    </div>
+                    <div>
+                        <span class="legend-val">{{ data.findings_severity.low }}</span>
+                        <span class="legend-pct">({% if data.findings_severity.total > 0 %}{{ '%.1f'|format((data.findings_severity.low / data.findings_severity.total) * 100) }}%{% else %}0%{% endif %})</span>
+                    </div>
+                </div>
+                <div class="legend-item-row">
+                    <div class="legend-left">
+                        <span class="legend-dot" style="background-color: #3B82F6;"></span>
+                        <span>Info</span>
+                    </div>
+                    <div>
+                        <span class="legend-val">{{ data.findings_severity.info }}</span>
+                        <span class="legend-pct">({% if data.findings_severity.total > 0 %}{{ '%.1f'|format((data.findings_severity.info / data.findings_severity.total) * 100) }}%{% else %}0%{% endif %})</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart 2: Open Ports by Service -->
+    <div class="card-saas">
+        <div class="card-header-flex">
+            <h2 class="card-header-title">Open Ports by Service</h2>
+            <select class="select-time-filter" aria-label="Time period filter">
+                <option value="month">This Month</option>
+                <option value="week">Last 7 Days</option>
+                <option value="year">All Time</option>
+            </select>
+        </div>
+        <div class="chart-doughnut-layout">
+            <div class="chart-doughnut-wrapper">
+                <canvas id="chartOpenPorts"></canvas>
+            </div>
+            <div class="chart-custom-legend">
+                {% set total_ports = data.kpi.open_ports %}
+                <div class="legend-item-row">
+                    <div class="legend-left">
+                        <span class="legend-dot" style="background-color: #2563EB;"></span>
+                        <span>HTTP</span>
+                    </div>
+                    <div>
+                        <span class="legend-val">{{ data.open_ports_by_service.http or 0 }}</span>
+                        <span class="legend-pct">({% if total_ports > 0 %}{{ '%.1f'|format(((data.open_ports_by_service.http or 0) / total_ports) * 100) }}%{% else %}0%{% endif %})</span>
+                    </div>
+                </div>
+                <div class="legend-item-row">
+                    <div class="legend-left">
+                        <span class="legend-dot" style="background-color: #60A5FA;"></span>
+                        <span>SSH</span>
+                    </div>
+                    <div>
+                        <span class="legend-val">{{ data.open_ports_by_service.ssh or 0 }}</span>
+                        <span class="legend-pct">({% if total_ports > 0 %}{{ '%.1f'|format(((data.open_ports_by_service.ssh or 0) / total_ports) * 100) }}%{% else %}0%{% endif %})</span>
+                    </div>
+                </div>
+                <div class="legend-item-row">
+                    <div class="legend-left">
+                        <span class="legend-dot" style="background-color: #06B6D4;"></span>
+                        <span>HTTPS</span>
+                    </div>
+                    <div>
+                        <span class="legend-val">{{ data.open_ports_by_service.https or 0 }}</span>
+                        <span class="legend-pct">({% if total_ports > 0 %}{{ '%.1f'|format(((data.open_ports_by_service.https or 0) / total_ports) * 100) }}%{% else %}0%{% endif %})</span>
+                    </div>
+                </div>
+                <div class="legend-item-row">
+                    <div class="legend-left">
+                        <span class="legend-dot" style="background-color: #10B981;"></span>
+                        <span>DNS</span>
+                    </div>
+                    <div>
+                        <span class="legend-val">{{ data.open_ports_by_service.dns or 0 }}</span>
+                        <span class="legend-pct">({% if total_ports > 0 %}{{ '%.1f'|format(((data.open_ports_by_service.dns or 0) / total_ports) * 100) }}%{% else %}0%{% endif %})</span>
+                    </div>
+                </div>
+                <div class="legend-item-row">
+                    <div class="legend-left">
+                        <span class="legend-dot" style="background-color: #F97316;"></span>
+                        <span>FTP</span>
+                    </div>
+                    <div>
+                        <span class="legend-val">{{ data.open_ports_by_service.ftp or 0 }}</span>
+                        <span class="legend-pct">({% if total_ports > 0 %}{{ '%.1f'|format(((data.open_ports_by_service.ftp or 0) / total_ports) * 100) }}%{% else %}0%{% endif %})</span>
+                    </div>
+                </div>
+                <div class="legend-item-row">
+                    <div class="legend-left">
+                        <span class="legend-dot" style="background-color: #94A3B8;"></span>
+                        <span>Others</span>
+                    </div>
+                    <div>
+                        <span class="legend-val">{{ data.open_ports_by_service.others or 0 }}</span>
+                        <span class="legend-pct">({% if total_ports > 0 %}{{ '%.1f'|format(((data.open_ports_by_service.others or 0) / total_ports) * 100) }}%{% else %}0%{% endif %})</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart 3: Scan Activity -->
+    <div class="card-saas">
+        <div class="card-header-flex">
+            <h2 class="card-header-title">Scan Activity</h2>
+            <select class="select-time-filter" aria-label="Time period filter">
+                <option value="month">This Month</option>
+                <option value="week">Last 7 Days</option>
+                <option value="year">All Time</option>
+            </select>
+        </div>
+        <div class="chart-line-body">
+            <canvas id="chartScanActivity"></canvas>
+        </div>
+    </div>
+</section>
+
+<!-- =========================================================================
+     3. Bottom Grid: Recent Scans & Top Hosts
+     ========================================================================= -->
+<section class="details-grid">
+    <!-- Left Column (Recent Scans + Services Detected) -->
+    <div class="d-flex flex-column gap-3">
+        <!-- Recent Scans Card -->
+        <div class="card-saas">
+            <div class="card-header-flex">
+                <h2 class="card-header-title">Recent Scans</h2>
+                <a href="{{ url_for('scans.scan_history') }}" class="text-primary text-decoration-none fs-8 fw-semibold">View All Scans</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table-saas-clean mb-0">
+                    <thead>
+                        <tr>
+                            <th>Target</th>
+                            <th>Scan Profile</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Hosts</th>
+                            <th>Open Ports</th>
+                            <th>Findings</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if data.recent_scans %}
+                            {% for scan in data.recent_scans %}
+                            <tr>
+                                <td>
+                                    <div class="target-cell">
+                                        <i class="fa-solid fa-globe text-muted fs-8"></i>
+                                        <span>{{ scan.target }}</span>
+                                    </div>
+                                </td>
+                                <td class="text-secondary">{{ scan.scan_profile }}</td>
+                                <td class="text-secondary">{{ scan.date }}</td>
+                                <td>
+                                    {% if scan.status == 'Completed' %}
+                                    <span class="badge-status-completed">Completed</span>
+                                    {% elif scan.status == 'Running' %}
+                                    <span class="badge bg-primary-soft text-primary">Running</span>
+                                    {% elif scan.status == 'Failed' %}
+                                    <span class="badge bg-danger-soft text-danger">Failed</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary-soft text-secondary">{{ scan.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="fw-semibold">{{ scan.hosts }}</td>
+                                <td class="fw-semibold">{{ scan.open_ports }}</td>
+                                <td>
+                                    <span class="findings-indicator">
+                                        <i class="fa-solid fa-circle dot-sev-{{ scan.findings_severity }} fs-9"></i>
+                                        <span>{{ scan.findings }}</span>
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('scans.scan_results', scan_id=scan.id) }}" class="btn btn-outline-primary btn-xs" title="View Results">
+                                        <i class="fa-solid fa-eye me-1"></i> View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="8" class="text-center py-4 text-muted">
+                                    <i class="fa-solid fa-radar fa-2x mb-2 d-block text-secondary opacity-50"></i>
+                                    <span class="fs-8">No scans executed yet. <a href="{{ url_for('scans.new_scan') }}" class="text-primary text-decoration-none fw-semibold">Launch your first scan</a>.</span>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Services Detected Horizontal Card -->
+        <div class="card-saas" id="servicesSection">
+            <div class="card-header-flex pb-1">
+                <h2 class="card-header-title">Services Detected</h2>
+            </div>
+            <div class="services-detected-grid">
+                {% if data.services_detected_list %}
+                    {% for svc in data.services_detected_list %}
+                    <div class="service-card-compact">
+                        <div class="service-icon-box">
+                            <i class="{{ svc.icon }}"></i>
+                        </div>
+                        <div>
+                            <div class="service-name">{{ svc.name }}</div>
+                            <div class="service-count">{{ svc.count }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-3 text-muted w-100">
+                        <span class="fs-8">No active services enumerated yet.</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column (Top Hosts by Findings + Scan Profiles Used) -->
+    <div class="d-flex flex-column gap-3">
+        <!-- Top Hosts by Findings Card -->
+        <div class="card-saas" id="hostsSection">
+            <div class="card-header-flex">
+                <h2 class="card-header-title">Top Hosts by Findings</h2>
+                <a href="{{ url_for('findings.index') }}" class="text-primary text-decoration-none fs-8 fw-semibold">View All</a>
+            </div>
+            <div class="top-hosts-list">
+                {% if data.top_hosts %}
+                    {% for host in data.top_hosts %}
+                    <div class="host-item-block">
+                        <div class="host-item-header">
+                            <div class="host-ip-info">
+                                <i class="fa-solid fa-globe text-muted fs-8"></i>
+                                <span>{{ host.ip }}</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="host-findings-tag">{{ host.label or (host.findings_count ~ ' Findings') }}</span>
+                                <span class="{{ host.badge_class or ('badge-severity-' ~ host.severity|lower) }}">{{ host.severity }}</span>
+                            </div>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar-fill" style="width: {{ host.percentage }}%; background-color: {{ host.bar_color or '#2563EB' }};"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <i class="fa-solid fa-server fa-2x mb-2 d-block text-secondary opacity-50"></i>
+                        <span class="fs-8">No target hosts discovered yet.</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Scan Profiles Used Card -->
+        <div class="card-saas">
+            <div class="card-header-flex">
+                <h2 class="card-header-title">Scan Profiles Used</h2>
+                <select class="select-time-filter" aria-label="Time period filter">
+                    <option value="month">This Month</option>
+                    <option value="week">Last 7 Days</option>
+                    <option value="year">All Time</option>
+                </select>
+            </div>
+            <div class="scan-profiles-list">
+                {% for profile in data.scan_profiles %}
+                <div class="scan-profile-row">
+                    <span class="profile-name" title="{{ profile.name }}">{{ profile.name }}</span>
+                    <div class="profile-bar-track">
+                        <div class="profile-bar-fill" style="width: {{ profile.percentage }}%;"></div>
+                    </div>
+                    <span class="profile-count">{{ profile.count }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

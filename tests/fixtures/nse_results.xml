@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE nmaprun>
+<nmaprun scanner="nmap" args="nmap -sV -sC 192.168.56.20" start="1718010000" startstr="Mon Jun 10 10:30:00 2024" version="7.94" xmloutputversion="1.05">
+<host starttime="1718010000" endtime="1718010050">
+<status state="up" reason="echo-reply"/>
+<address addr="192.168.56.20" addrtype="ipv4"/>
+<hostnames>
+<hostname name="lab-target.local" type="user"/>
+</hostnames>
+<ports>
+<port protocol="tcp" portid="22">
+<state state="open" reason="syn-ack"/>
+<service name="ssh" product="OpenSSH" version="8.2p1"/>
+<script id="ssh2-enum-algos" output="&#xa;  kex_algorithms: (9)&#xa;    curve25519-sha256&#xa;    diffie-hellman-group-exchange-sha256"/>
+<script id="ssh-hostkey" output="&#xa;  2048 SHA256:abcd1234efgh5678 (RSA)"/>
+</port>
+<port protocol="tcp" portid="80">
+<state state="open" reason="syn-ack"/>
+<service name="http" product="Apache httpd" version="2.4.41"/>
+<script id="http-title" output="Laboratory Portal - Welcome"/>
+<script id="http-methods" output="&#xa;  Supported Methods: GET HEAD POST OPTIONS"/>
+</port>
+</ports>
+<hostscript>
+<script id="clock-skew" output="mean: 0s, deviation: 0s, median: 0s"/>
+</hostscript>
+</host>
+<runstats>
+<finished time="1718010050" timestr="Mon Jun 10 10:30:50 2024" elapsed="50.00" summary="Nmap done: 1 IP address (1 host up) scanned in 50.00 seconds" exit="success"/>
+<hosts up="1" down="0" total="1"/>
+</runstats>
+</nmaprun>

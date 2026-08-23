@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}New Scan — NMAP Security Suite{% endblock %}
+{% block page_title %}Initiate Security Scan{% endblock %}
+{% block page_subtitle %}Configure target coordinates and execute predefined scan profiles{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card-saas p-4">
+            <!-- Header Section -->
+            <div class="d-flex justify-content-between align-items-center pb-3 border-bottom mb-4">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="brand-icon" style="width: 44px; height: 44px;">
+                        <i class="fa-solid fa-crosshairs fa-lg"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold mb-0" style="color: var(--text-main);">Configure Target & Scan Profile</h4>
+                        <span class="text-secondary fs-8">Strict laboratory validation is enforced prior to execution.</span>
+                    </div>
+                </div>
+                <span class="badge bg-light text-secondary border" id="validationStatusBadge">Not Validated</span>
+            </div>
+
+            <!-- Authorization Notice Alert -->
+            <div class="alert alert-danger mb-4 d-flex gap-3 align-items-center py-2 px-3">
+                <i class="fa-solid fa-shield-halved text-danger fs-4 flex-shrink-0"></i>
+                <div class="fs-8">
+                    <strong>Strict Laboratory Authorization Protocol:</strong> Only scan laboratory hosts and subnets you own or have explicit authorization to test. Public Internet targets are strictly blocked by safety policy.
+                </div>
+            </div>
+
+            <form id="scanConfigForm" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+                <!-- Target Input Row with Validation Button -->
+                <div class="mb-3">
+                    <label for="targetInput" class="form-label d-flex justify-content-between align-items-center">
+                        <span>Target IP Address or Hostname <span class="text-danger">*</span></span>
+                        <span class="text-muted fs-9">RFC 1918 / Loopback / Authorized Lab Domain</span>
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light text-secondary"><i class="fa-solid fa-globe"></i></span>
+                        <input type="text" class="form-control" id="targetInput" name="target" placeholder="e.g. 192.168.56.20 or 127.0.0.1 or ubuntu-lab.local" required autofocus autocomplete="off">
+                        <button type="button" class="btn btn-outline-primary" id="btnValidateTarget">
+                            <i class="fa-solid fa-shield-check me-1"></i> Validate Target
+                        </button>
+                    </div>
+
+                    <!-- Quick Selection Target Pills -->
+                    <div class="d-flex align-items-center gap-2 mt-2 flex-wrap">
+                        <span class="text-secondary fs-9 fw-semibold">Quick Select:</span>
+                        <button type="button" class="btn btn-xs btn-outline-secondary quick-target-pill" data-target="127.0.0.1">127.0.0.1</button>
+                        <button type="button" class="btn btn-xs btn-outline-secondary quick-target-pill" data-target="192.168.56.20">192.168.56.20</button>
+                        <button type="button" class="btn btn-xs btn-outline-secondary quick-target-pill" data-target="10.0.0.5">10.0.0.5</button>
+                        <button type="button" class="btn btn-xs btn-outline-secondary quick-target-pill" data-target="ubuntu-lab.local">ubuntu-lab.local</button>
+                    </div>
+                </div>
+
+                <!-- Validation Feedback Area -->
+                <div id="validationFeedback" class="mb-4"></div>
+
+                <!-- Scan Profile Select -->
+                <div class="mb-3">
+                    <label for="scanProfileSelect" class="form-label">Predefined Scan Profile</label>
+                    <select class="form-select" id="scanProfileSelect" name="profile" required>
+                        <option value="host_discovery">Host Discovery (nmap -sn)</option>
+                        <option value="basic_port_scan">Basic Port Scan (nmap -F)</option>
+                        <option value="service_enumeration">Service Enumeration (nmap -sV)</option>
+                        <option value="service_default_nse" selected>Service + Default NSE (nmap -sV -sC)</option>
+                        <option value="http_enumeration">HTTP Enumeration (nmap -p 80,443 --script http-*)</option>
+                        <option value="ssh_enumeration">SSH Enumeration (nmap -p 22 --script ssh2-*)</option>
+                        <option value="comprehensive_lab_scan">Comprehensive Lab Scan (nmap -sV -p- -T4)</option>
+                    </select>
+                </div>
+
+                <!-- Profile Description & Metadata Box -->
+                <div class="card p-3 bg-light border mb-4 rounded-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="text-secondary fs-9 fw-bold text-uppercase">Profile Description</span>
+                        <span class="badge bg-primary-soft text-primary fs-9" id="profileDurationText">~45-90s</span>
+                    </div>
+                    <p class="text-dark fs-8 mb-2" id="profileDescText">
+                        Perform service version detection combined with Nmap's default safe script suite.
+                    </p>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="text-muted fs-9">Scan Type:</span>
+                        <span class="badge bg-white text-secondary border fs-9" id="profileTypeText">Service + Safe NSE Analysis</span>
+                    </div>
+                </div>
+
+                <!-- Authorization Checkbox -->
+                <div class="mb-4 p-3 rounded bg-light border">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="confirmScanAuth" required>
+                        <label class="form-check-label text-secondary fs-8" for="confirmScanAuth">
+                            I verify and confirm I have explicit permission and authorization to assess the specified target in this laboratory.
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Action Button -->
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-grow-1 py-2 fw-semibold" id="btnStartScan" disabled>
+                        <i class="fa-solid fa-play me-2"></i> Start Scan
+                    </button>
+                    <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-secondary px-4 py-2">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/new_scan.js') }}"></script>
+{% endblock %}

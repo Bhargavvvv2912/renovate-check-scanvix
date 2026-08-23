@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Scan Progress #{{ scan.id }} — NMAP Security Suite{% endblock %}
+{% block page_title %}Active Assessment Scanner{% endblock %}
+{% block page_subtitle %}Live background execution and process lifecycle telemetry{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center" id="scanProgressContainer" data-scan-id="{{ scan.id }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+    <div class="col-lg-8">
+        <div class="card-saas p-4">
+            <!-- Header Section -->
+            <div class="d-flex justify-content-between align-items-center pb-3 border-bottom mb-4">
+                <div>
+                    <h4 class="fw-bold mb-1" style="color: var(--text-main);">Executing Nmap Assessment Scan #{{ scan.id }}</h4>
+                    <span class="text-secondary fs-8">
+                        Target: <code class="text-dark fw-bold">{{ scan.target }}</code> | 
+                        Profile: <strong class="text-dark">{{ profile.name if profile else scan.scan_profile }}</strong>
+                    </span>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="badge bg-light text-dark border font-monospace fs-8" id="elapsedTimer">00:00</span>
+                    <span class="badge bg-primary-soft text-primary border border-primary-subtle px-3 py-2" id="scanStatusBadge">
+                        <i class="fa-solid fa-spinner fa-spin me-1"></i> Running
+                    </span>
+                </div>
+            </div>
+
+            <!-- Error Notice Box (hidden by default) -->
+            <div id="scanErrorNotice" class="alert alert-danger d-none mb-4 d-flex gap-3 align-items-center py-3 px-3">
+                <i class="fa-solid fa-triangle-exclamation text-danger fs-3 flex-shrink-0"></i>
+                <div>
+                    <strong class="d-block fs-8 text-danger">Execution Terminated</strong>
+                    <span class="fs-8 text-secondary" id="scanErrorNoticeText"></span>
+                </div>
+            </div>
+            
+            <div class="card-body px-0 py-2">
+                <!-- Progress Bar -->
+                <div class="progress mb-4" style="height: 8px;">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" id="scanProgressBar" role="progressbar" style="width: 45%"></div>
+                </div>
+
+                <!-- Stages Checklist -->
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center py-2 px-0">
+                        <div>
+                            <i class="fa-solid fa-circle-check text-success me-3"></i>
+                            <span class="fw-medium">Target Validation & Safety Authorization</span>
+                        </div>
+                        <span class="badge-status-completed">Passed</span>
+                    </li>
+                    <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center py-2 px-0">
+                        <div>
+                            <i class="fa-solid fa-circle-check text-success me-3"></i>
+                            <span class="fw-medium">Process Initialized & Isolated Storage Ready</span>
+                        </div>
+                        <span class="badge-status-completed">Active</span>
+                    </li>
+                    <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center py-2 px-0" id="stageNmapExec">
+                        <div>
+                            <i class="fa-solid fa-spinner fa-spin text-primary me-3"></i>
+                            <span class="fw-medium">Nmap Execution & Output Capture</span>
+                        </div>
+                        <span class="badge bg-primary-soft text-primary">In Progress</span>
+                    </li>
+                    <li class="list-group-item bg-transparent text-secondary d-flex justify-content-between align-items-center py-2 px-0" id="stageXmlSave">
+                        <div>
+                            <i class="fa-regular fa-circle me-3"></i>
+                            <span>XML Output Storage</span>
+                        </div>
+                        <span class="badge bg-light text-secondary">Pending</span>
+                    </li>
+                    <li class="list-group-item bg-transparent text-secondary d-flex justify-content-between align-items-center py-2 px-0" id="stageResults">
+                        <div>
+                            <i class="fa-regular fa-circle me-3"></i>
+                            <span>Scan Outcome Available</span>
+                        </div>
+                        <span class="badge bg-light text-secondary">Pending</span>
+                    </li>
+                </ul>
+
+                <!-- Cancellation CTA -->
+                <div class="mt-4 pt-3 border-top text-center">
+                    <button class="btn btn-outline-danger btn-sm px-4" id="btnCancelScan">
+                        <i class="fa-solid fa-ban me-2"></i> Terminate Scanning Session
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/scan_progress.js') }}"></script>
+{% endblock %}

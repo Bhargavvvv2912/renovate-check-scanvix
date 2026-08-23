@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE nmaprun>
+<nmaprun scanner="nmap" args="nmap -sn 192.168.1.0/24" start="1718010000" startstr="Mon Jun 10 10:30:00 2024" version="7.94" xmloutputversion="1.05">
+<host starttime="1718010000" endtime="1718010002">
+<status state="up" reason="arp-response"/>
+<address addr="192.168.1.1" addrtype="ipv4"/>
+<hostnames>
+<hostname name="gateway.local" type="user"/>
+</hostnames>
+<ports>
+<port protocol="tcp" portid="53">
+<state state="open"/>
+<service name="domain"/>
+</port>
+</ports>
+</host>
+<host starttime="1718010000" endtime="1718010003">
+<status state="up" reason="arp-response"/>
+<address addr="192.168.1.10" addrtype="ipv4"/>
+<hostnames>
+<hostname name="server.local" type="user"/>
+</hostnames>
+<ports>
+<port protocol="tcp" portid="80">
+<state state="open"/>
+<service name="http"/>
+</port>
+</ports>
+</host>
+<host starttime="1718010000" endtime="1718010004">
+<status state="down" reason="no-response"/>
+<address addr="192.168.1.99" addrtype="ipv4"/>
+<ports>
+</ports>
+</host>
+<host starttime="1718010000" endtime="1718010005">
+<status state="up" reason="echo-reply"/>
+<address addr="fe80::1" addrtype="ipv6"/>
+<hostnames/>
+<ports>
+<port protocol="tcp" portid="22">
+<state state="open"/>
+<service name="ssh"/>
+</port>
+</ports>
+</host>
+<runstats>
+<finished time="1718010005" timestr="Mon Jun 10 10:30:05 2024" elapsed="5.00" summary="Nmap done: 4 IP addresses (3 hosts up) scanned in 5.00 seconds" exit="success"/>
+<hosts up="3" down="1" total="4"/>
+</runstats>
+</nmaprun>

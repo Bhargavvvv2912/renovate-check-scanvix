@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}About & Diagnostics — NMAP Security Suite{% endblock %}
+{% block page_title %}System Diagnostics & Viva Guide{% endblock %}
+{% block page_subtitle %}Environment telemetry and educational viva references{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Environment Diagnostics -->
+    <div class="col-lg-5">
+        <div class="card-saas p-4 mb-4">
+            <h5 class="fw-bold mb-3" style="color: var(--text-main); font-size: 1rem;">
+                <i class="fa-solid fa-server text-primary me-2"></i> Environment Diagnostics
+            </h5>
+            <table class="table table-borderless text-secondary mb-0 align-middle fs-8">
+                <tbody>
+                    <tr>
+                        <td class="ps-0">Flask Version:</td>
+                        <td class="text-end fw-semibold" style="color: var(--text-main);">3.0.3</td>
+                    </tr>
+                    <tr>
+                        <td class="ps-0">Database Status:</td>
+                        <td class="text-end"><span class="badge-status-completed">SQLite Connected</span></td>
+                    </tr>
+                    <tr>
+                        <td class="ps-0">Scan Profiles:</td>
+                        <td class="text-end fw-semibold" style="color: var(--text-main);">6 Predefined Active</td>
+                    </tr>
+                    <tr>
+                        <td class="ps-0">Report Format:</td>
+                        <td class="text-end fw-semibold" style="color: var(--text-main);">ReportLab PDF Engine</td>
+                    </tr>
+                    <tr>
+                        <td class="ps-0">Nmap Engine:</td>
+                        <td class="text-end">
+                            <span class="badge-status-completed">v7.94 (Ready)</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card-saas p-4">
+            <h5 class="fw-bold mb-3" style="color: var(--text-main); font-size: 1rem;">
+                <i class="fa-solid fa-shield-halved text-danger me-2"></i> Safe Lab Constraints
+            </h5>
+            <p class="text-secondary fs-8">
+                By default, this web application restricts scans to private subnet IP ranges (RFC 1918) and local loopback coordinates:
+            </p>
+            <ul class="text-secondary fs-8 ps-3">
+                <li><code>127.0.0.1</code> / <code>::1</code> (Local Host)</li>
+                <li><code>10.0.0.0/8</code> (Class A Private Network)</li>
+                <li><code>172.16.0.0/12</code> (Class B Private Network)</li>
+                <li><code>192.168.0.0/16</code> (Class C Private Network)</li>
+            </ul>
+            <p class="text-secondary fs-8 mb-0">
+                This rule prevents unauthorized outbound scans to public networks.
+            </p>
+        </div>
+    </div>
+
+    <!-- Viva guide -->
+    <div class="col-lg-7">
+        <div class="card-saas p-4 h-100">
+            <h5 class="fw-bold mb-3" style="color: var(--text-main); font-size: 1rem;">
+                <i class="fa-solid fa-graduation-cap text-success me-2"></i> Viva Cheat Sheet (College Q&A)
+            </h5>
+            
+            <div class="accordion accordion-flush" id="vivaAccordion">
+                <div class="accordion-item bg-transparent border-bottom">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button bg-transparent fw-semibold text-dark collapsed ps-0 fs-8" type="button" data-bs-toggle="collapse" data-bs-target="#viva1">
+                            Q1: How does the backend execute Nmap commands securely?
+                        </button>
+                    </h2>
+                    <div id="viva1" class="accordion-collapse collapse" data-bs-parent="#vivaAccordion">
+                        <div class="accordion-body text-secondary fs-8 ps-0">
+                            The application uses Python's <code>subprocess.Popen</code> class with arguments passed as a structured array rather than a single command string. The parameters <code>shell=False</code> and strict sanitization are implemented. Users cannot type arbitrary command syntax, eliminating SQL Injection or Command Injection risks.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item bg-transparent border-bottom">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button bg-transparent fw-semibold text-dark collapsed ps-0 fs-8" type="button" data-bs-toggle="collapse" data-bs-target="#viva2">
+                            Q2: How does the application parse the Nmap output?
+                        </button>
+                    </h2>
+                    <div id="viva2" class="accordion-collapse collapse" data-bs-parent="#vivaAccordion">
+                        <div class="accordion-body text-secondary fs-8 ps-0">
+                            The application initiates Nmap with the <code>-oX</code> switch, generating scan outcomes in structured XML formats. Python's <code>xml.etree.ElementTree</code> module parses this XML to extract host status, ports, services, OS versions, and script results before inserting them into SQLite.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item bg-transparent">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button bg-transparent fw-semibold text-dark collapsed ps-0 fs-8" type="button" data-bs-toggle="collapse" data-bs-target="#viva3">
+                            Q3: How are security findings categorized?
+                        </button>
+                    </h2>
+                    <div id="viva3" class="accordion-collapse collapse" data-bs-parent="#vivaAccordion">
+                        <div class="accordion-body text-secondary fs-8 ps-0">
+                            A rule-based <em>Finding Analyzer</em> scans version numbers and services. For example, detecting plaintext HTTP on port 80 triggers a "Low" finding recommending encryption, while discovering outdated server software versions triggers "Medium" or "High" observations.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

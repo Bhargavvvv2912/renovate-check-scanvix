@@ -1,0 +1,1017 @@
+{% extends "base.html" %}
+
+{% block title %}Assessment Results Summary #{{ scan.id }} — NMAP Security Suite{% endblock %}
+{% block page_title %}Assessment Results Summary — Scan #{{ scan.id }}{% endblock %}
+{% block page_subtitle %}Target: {{ scan.target }} · {{ profile.name if profile else scan.scan_profile.replace('_', ' ').title() }} · Detailed Results{% endblock %}
+
+{% block content %}
+<!-- Back Navigation -->
+<div class="mb-3">
+    <a href="{{ url_for('scans.scan_history') }}" class="text-decoration-none text-secondary fs-8 fw-semibold">
+        <i class="fa-solid fa-arrow-left me-1"></i> Back to Scan History
+    </a>
+</div>
+
+{% if scan.status in ['pending', 'running', 'parsing', 'analyzing'] %}
+<!-- In-Progress Banner -->
+<div class="card-saas p-4 mb-4">
+    <div class="text-center py-4">
+        <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Processing...</span>
+        </div>
+        <h5 class="fw-bold text-dark mb-2">Scan is Still Being Processed</h5>
+        <p class="text-secondary fs-8 mb-3">
+            Status: <span class="badge bg-primary-soft text-primary">{{ scan.status.upper() }}</span>
+        </p>
+        <p class="text-muted fs-8 mb-3">Results may be incomplete. The page will show available data.</p>
+        <a href="{{ url_for('scans.scan_progress', scan_id=scan.id) }}" class="btn btn-primary btn-sm">
+            <i class="fa-solid fa-spinner me-1"></i> View Live Progress
+        </a>
+    </div>
+</div>
+{% elif scan.status == 'failed' %}
+<!-- Failed Scan Banner -->
+<div class="card-saas p-4 mb-4">
+    <div class="text-center py-4">
+        <i class="fa-solid fa-circle-xmark text-danger fa-3x mb-3"></i>
+        <h5 class="fw-bold text-dark mb-2">Scan Failed</h5>
+        <div class="mb-3">
+            <span class="text-secondary fs-8">Target:</span> <code class="text-primary fw-bold">{{ scan.target }}</code>
+            <span class="mx-2 text-muted">·</span>
+            <span class="text-secondary fs-8">Profile:</span> <span class="fw-semibold text-dark fs-8">{{ profile.name if profile else scan.scan_profile }}</span>
+            <span class="mx-2 text-muted">·</span>
+            <span class="badge bg-danger-soft text-danger">FAILED</span>
+        </div>
+        {% if scan.error_message %}
+        <div class="alert alert-danger d-inline-block text-start p-2 fs-8 mx-auto" style="max-width: 500px;">
+            <i class="fa-solid fa-circle-exclamation me-1"></i> {{ scan.error_message }}
+        </div>
+        {% else %}
+        <p class="text-muted fs-8">Unable to process scan results. Check server logs for details.</p>
+        {% endif %}
+        <div class="mt-3 d-flex gap-2 justify-content-center">
+            <button type="button" class="btn btn-primary btn-sm" onclick="rescanFromCurrent()">
+                <i class="fa-solid fa-rotate me-1"></i> Retry Scan
+            </button>
+            <a href="{{ url_for('scans.scan_history') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="fa-solid fa-arrow-left me-1"></i> Back to History
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Navigation Tabs -->
+<ul class="nav nav-tabs mb-4" id="scanResultsTabs" role="tablist" style="border-bottom: 2px solid #e2e8f0;">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active fw-bold text-secondary px-3 py-2" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview-pane" type="button" role="tab" aria-controls="overview-pane" aria-selected="true" style="border: none; border-bottom: 3px solid transparent; background: none;">
+            <i class="fa-solid fa-chart-pie me-1"></i> Overview
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link fw-bold text-secondary px-3 py-2" id="hosts-tab" data-bs-toggle="tab" data-bs-target="#hosts-pane" type="button" role="tab" aria-controls="hosts-pane" aria-selected="false" style="border: none; border-bottom: 3px solid transparent; background: none;">
+            <i class="fa-solid fa-desktop me-1"></i> Hosts ({{ hosts|length }})
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link fw-bold text-secondary px-3 py-2" id="ports-tab" data-bs-toggle="tab" data-bs-target="#ports-pane" type="button" role="tab" aria-controls="ports-pane" aria-selected="false" style="border: none; border-bottom: 3px solid transparent; background: none;">
+            <i class="fa-solid fa-network-wired me-1"></i> Ports & Services ({{ all_ports|length }})
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link fw-bold text-secondary px-3 py-2" id="nse-tab" data-bs-toggle="tab" data-bs-target="#nse-pane" type="button" role="tab" aria-controls="nse-pane" aria-selected="false" style="border: none; border-bottom: 3px solid transparent; background: none;">
+            <i class="fa-solid fa-code me-1"></i> NSE Results ({{ nse_results|length }})
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link fw-bold text-secondary px-3 py-2" id="findings-tab" data-bs-toggle="tab" data-bs-target="#findings-pane" type="button" role="tab" aria-controls="findings-pane" aria-selected="false" style="border: none; border-bottom: 3px solid transparent; background: none;">
+            <i class="fa-solid fa-shield-virus me-1"></i> Findings ({{ findings|length }})
+        </button>
+    </li>
+</ul>
+
+<style>
+    #scanResultsTabs .nav-link.active {
+        color: var(--primary-color) !important;
+        border-bottom: 3px solid var(--primary-color) !important;
+    }
+    #scanResultsTabs .nav-link:hover {
+        color: var(--primary-color-hover) !important;
+    }
+</style>
+
+<div class="tab-content" id="scanResultsTabContent">
+    <!-- ================================================================
+         1. Overview Tab
+         ================================================================ -->
+    <div class="tab-pane fade show active" id="overview-pane" role="tabpanel" aria-labelledby="overview-tab">
+        <div class="row g-4">
+            <!-- Execution Metadata Card -->
+            <div class="col-lg-5">
+                <div class="card-saas p-4 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0 text-dark fs-7">
+                            <i class="fa-solid fa-circle-info text-primary me-2"></i> Execution Metadata
+                        </h5>
+                        <span class="badge {% if scan.status == 'completed' %}badge-status-completed{% elif scan.status == 'running' %}bg-primary-soft text-primary{% elif scan.status == 'timeout' %}bg-warning-soft text-warning{% elif scan.status == 'failed' %}bg-danger-soft text-danger{% elif scan.status == 'cancelled' %}bg-secondary-soft text-secondary{% else %}bg-info-soft text-info{% endif %}">
+                            {{ scan.status.upper() }}
+                        </span>
+                    </div>
+
+                    <table class="table table-borderless text-secondary mb-0 align-middle fs-8">
+                        <tbody>
+                            <tr>
+                                <td class="ps-0 py-2">Target Host:</td>
+                                <td class="text-end py-2"><code class="text-primary fw-bold">{{ scan.target }}</code></td>
+                            </tr>
+                            <tr>
+                                <td class="ps-0 py-2">Scan Profile:</td>
+                                <td class="text-dark fw-semibold text-end py-2">{{ profile.name if profile else scan.scan_profile.replace('_', ' ').title() }}</td>
+                            </tr>
+                            <tr>
+                                <td class="ps-0 py-2">Start Time:</td>
+                                <td class="text-secondary text-end py-2">{{ scan.start_time.strftime('%b %d, %Y %I:%M:%S %p') if scan.start_time else 'N/A' }}</td>
+                            </tr>
+                            <tr>
+                                <td class="ps-0 py-2">Finished Time:</td>
+                                <td class="text-secondary text-end py-2">{{ scan.end_time.strftime('%b %d, %Y %I:%M:%S %p') if scan.end_time else 'N/A' }}</td>
+                            </tr>
+                            <tr>
+                                <td class="ps-0 py-2">Execution Duration:</td>
+                                <td class="text-dark fw-semibold text-end py-2">
+                                    {% if scan.duration %}{{ '%.2f'|format(scan.duration) }}s{% else %}—{% endif %}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    {% if scan.error_message %}
+                    <div class="alert alert-danger mt-3 mb-0 p-2 fs-8">
+                        <strong>Error:</strong> {{ scan.error_message }}
+                    </div>
+                    {% endif %}
+
+                    <div class="mt-4 pt-3 border-top d-flex gap-2 flex-wrap">
+                        <button type="button" class="btn btn-primary btn-sm" onclick="rescanFromCurrent()" title="Create a new scan with same target and profile">
+                            <i class="fa-solid fa-rotate me-1"></i> Rescan
+                        </button>
+                        {% if scan.xml_path %}
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#xmlMetadataModal">
+                            <i class="fa-solid fa-code me-1"></i> XML Artifact
+                        </button>
+                        {% endif %}
+                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="showDeleteModal()">
+                            <i class="fa-solid fa-trash me-1"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="col-lg-7">
+                <div class="row g-3">
+                    <!-- Hosts Card -->
+                    <div class="col-sm-4">
+                        <div class="card-saas p-3 text-center h-100">
+                            <div class="d-flex align-items-center justify-content-center gap-2 mb-2 text-primary">
+                                <i class="fa-solid fa-server fs-5"></i>
+                            </div>
+                            <h2 class="fw-bold mb-0 text-dark">{{ scan_stats.total_hosts }}</h2>
+                            <span class="fs-8 text-secondary">Hosts</span>
+                            <div class="mt-1 fs-9 text-muted">{{ scan_stats.hosts_up }} up</div>
+                        </div>
+                    </div>
+                    <!-- Open Ports Card -->
+                    <div class="col-sm-4">
+                        <div class="card-saas p-3 text-center h-100">
+                            <div class="d-flex align-items-center justify-content-center gap-2 mb-2 text-success">
+                                <i class="fa-solid fa-network-wired fs-5"></i>
+                            </div>
+                            <h2 class="fw-bold mb-0 text-dark">{{ scan_stats.open_ports }}</h2>
+                            <span class="fs-8 text-secondary">Open Ports</span>
+                            <div class="mt-1 fs-9 text-muted">{{ scan_stats.total_ports }} total</div>
+                        </div>
+                    </div>
+                    <!-- Services Card -->
+                    <div class="col-sm-4">
+                        <div class="card-saas p-3 text-center h-100">
+                            <div class="d-flex align-items-center justify-content-center gap-2 mb-2" style="color: #06B6D4;">
+                                <i class="fa-solid fa-layer-group fs-5"></i>
+                            </div>
+                            <h2 class="fw-bold mb-0 text-dark">{{ scan_stats.unique_services }}</h2>
+                            <span class="fs-8 text-secondary">Services</span>
+                        </div>
+                    </div>
+                    <!-- NSE Results Card -->
+                    <div class="col-sm-4">
+                        <div class="card-saas p-3 text-center h-100">
+                            <div class="d-flex align-items-center justify-content-center gap-2 mb-2" style="color: #8B5CF6;">
+                                <i class="fa-solid fa-scroll fs-5"></i>
+                            </div>
+                            <h2 class="fw-bold mb-0 text-dark">{{ scan_stats.nse_results }}</h2>
+                            <span class="fs-8 text-secondary">NSE Results</span>
+                        </div>
+                    </div>
+                    <!-- Findings Card -->
+                    <div class="col-sm-4">
+                        <div class="card-saas p-3 text-center h-100">
+                            <div class="d-flex align-items-center justify-content-center gap-2 mb-2 text-danger">
+                                <i class="fa-solid fa-shield-virus fs-5"></i>
+                            </div>
+                            <h2 class="fw-bold mb-0 text-dark">{{ scan_stats.findings }}</h2>
+                            <span class="fs-8 text-secondary">Findings</span>
+                        </div>
+                    </div>
+                    <!-- Port Breakdown Card -->
+                    <div class="col-sm-4">
+                        <div class="card-saas p-3 h-100">
+                            <span class="fs-8 fw-semibold text-secondary d-block mb-2">Port States</span>
+                            <div class="d-flex justify-content-between fs-9 mb-1">
+                                <span>Open</span><span class="fw-bold text-success">{{ scan_stats.open_ports }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between fs-9 mb-1">
+                                <span>Filtered</span><span class="fw-bold text-warning">{{ scan_stats.filtered_ports }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between fs-9">
+                                <span>Closed</span><span class="fw-bold text-secondary">{{ scan_stats.closed_ports }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                {% if scan_stats.findings > 0 or scan_stats.total_ports > 0 %}
+                <div class="row g-3 mt-1">
+                    {% if scan_stats.total_ports > 0 %}
+                    <div class="col-sm-6">
+                        <div class="card-saas p-3">
+                            <span class="fs-8 fw-semibold text-secondary d-block mb-2">Ports by State</span>
+                            <div style="max-height: 180px; display: flex; justify-content: center;">
+                                <canvas id="chartPortsByState"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if scan_stats.findings > 0 %}
+                    <div class="col-sm-6">
+                        <div class="card-saas p-3">
+                            <span class="fs-8 fw-semibold text-secondary d-block mb-2">Findings by Severity</span>
+                            <div style="max-height: 180px; display: flex; justify-content: center;">
+                                <canvas id="chartFindingsBySeverity"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================================
+         2. Hosts Tab
+         ================================================================ -->
+    <div class="tab-pane fade" id="hosts-pane" role="tabpanel" aria-labelledby="hosts-tab">
+        <div class="card-saas p-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                <div>
+                    <h5 class="fw-bold mb-0 text-dark fs-7">
+                        <i class="fa-solid fa-desktop text-primary me-2"></i> Discovered Target Hosts
+                    </h5>
+                    <span class="text-secondary fs-8">Enumerated network targets and OS fingerprints</span>
+                </div>
+                <div class="w-auto">
+                    <input type="text" id="host-search-input" class="form-control form-control-sm" placeholder="Filter host IP, hostname..." style="max-width: 250px;">
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table-saas-clean mb-0" id="hosts-table">
+                    <thead>
+                        <tr>
+                            <th>IP Address</th>
+                            <th>Hostname</th>
+                            <th>Host State</th>
+                            <th>OS Detection</th>
+                            <th>Open Ports</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for host in hosts %}
+                        <tr class="host-row" data-host-id="{{ host.id }}">
+                            <td class="fw-bold font-monospace text-primary">{{ host.ip_address }}</td>
+                            <td class="text-dark">{{ host.hostname if host.hostname else '—' }}</td>
+                            <td>
+                                {% if host.state == 'up' %}
+                                <span class="badge bg-success-soft text-success">Up</span>
+                                {% else %}
+                                <span class="badge bg-secondary-soft text-secondary">{{ host.state.capitalize() if host.state else 'Unknown' }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-secondary fs-8">
+                                {% if host.os_information %}
+                                <i class="fa-solid fa-microchip me-1 text-primary"></i> {{ host.os_information }}
+                                {% else %}
+                                <span class="text-muted">Not Detected</span>
+                                {% endif %}
+                            </td>
+                            <td class="fw-semibold text-dark">{{ host.ports|length }}</td>
+                            <td>
+                                <button type="button" class="btn btn-outline-primary btn-xs btn-toggle-host-detail" data-host-id="{{ host.id }}">
+                                    <i class="fa-solid fa-chevron-down"></i> Details
+                                </button>
+                            </td>
+                        </tr>
+                        <!-- Host Detail Expandable Row -->
+                        <tr class="host-detail-row" id="host-detail-{{ host.id }}" style="display: none;">
+                            <td colspan="6" class="p-0">
+                                <div class="bg-light p-3 border-top">
+                                    <h6 class="fw-bold text-dark fs-8 mb-2">
+                                        <i class="fa-solid fa-list-check text-primary me-1"></i>
+                                        Ports for {{ host.ip_address }}
+                                        {% if host.hostname %}({{ host.hostname }}){% endif %}
+                                    </h6>
+                                    {% if host.ports|length > 0 %}
+                                    <table class="table table-sm table-borderless mb-0 fs-8">
+                                        <thead>
+                                            <tr class="text-secondary">
+                                                <th>Port</th><th>Protocol</th><th>State</th><th>Service</th><th>Product</th><th>Version</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for p in host.ports %}
+                                            <tr>
+                                                <td class="fw-bold font-monospace">{{ p.port_number }}</td>
+                                                <td class="text-uppercase text-secondary">{{ p.protocol }}</td>
+                                                <td>
+                                                    {% if p.state == 'open' %}<span class="badge bg-success-soft text-success">open</span>
+                                                    {% elif p.state == 'filtered' %}<span class="badge bg-warning-soft text-warning">filtered</span>
+                                                    {% else %}<span class="badge bg-secondary-soft text-secondary">{{ p.state }}</span>{% endif %}
+                                                </td>
+                                                <td class="fw-semibold text-primary">{{ p.service or '—' }}</td>
+                                                <td>{{ p.product or '—' }}</td>
+                                                <td class="font-monospace text-secondary">{{ p.version or '—' }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                    {% else %}
+                                    <p class="text-muted fs-8 mb-0">No ports detected for this host.</p>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                <i class="fa-solid fa-desktop fa-2x mb-2 d-block" style="opacity:0.3;"></i>
+                                No hosts detected for this scan.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================================
+         3. Ports & Services Tab
+         ================================================================ -->
+    <div class="tab-pane fade" id="ports-pane" role="tabpanel" aria-labelledby="ports-tab">
+        <div class="card-saas p-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+                <div>
+                    <h5 class="fw-bold mb-0 text-dark fs-7">
+                        <i class="fa-solid fa-list-check text-primary me-2"></i> Observed Ports & Services
+                    </h5>
+                    <span class="text-secondary fs-8">Observational enumeration metadata captured by Nmap</span>
+                </div>
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <div class="btn-group btn-group-sm" role="group" id="port-filter-buttons">
+                        <button type="button" class="btn btn-primary active" id="btn-filter-all" onclick="filterPorts('all', this)">All ({{ all_ports|length }})</button>
+                        <button type="button" class="btn btn-outline-secondary" id="btn-filter-open" onclick="filterPorts('open', this)">Open ({{ all_ports | selectattr('state', 'equalto', 'open') | list | length }})</button>
+                        <button type="button" class="btn btn-outline-secondary" id="btn-filter-closed" onclick="filterPorts('closed', this)">Closed ({{ all_ports | selectattr('state', 'equalto', 'closed') | list | length }})</button>
+                        <button type="button" class="btn btn-outline-secondary" id="btn-filter-filtered" onclick="filterPorts('filtered', this)">Filtered ({{ all_ports | selectattr('state', 'equalto', 'filtered') | list | length }})</button>
+                    </div>
+                    <div class="input-group input-group-sm" style="width: 220px;">
+                        <span class="input-group-text bg-white text-muted border-end-0"><i class="fa-solid fa-magnifying-glass"></i></span>
+                        <input type="text" id="port-search-input" class="form-control border-start-0" placeholder="Search port or service..." onkeyup="searchPorts()">
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table-saas-clean mb-0" id="ports-table">
+                    <thead>
+                        <tr>
+                            <th>Host</th><th>Port</th><th>Protocol</th><th>State</th><th>Service</th><th>Product</th><th>Version</th><th>Extra Info</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in all_ports %}
+                        <tr class="port-row" data-state="{{ p.state.lower() }}" data-service="{{ p.service.lower() if p.service else '' }}">
+                            <td class="font-monospace text-secondary fs-8">{{ p.host_ip }}</td>
+                            <td class="fw-bold text-dark font-monospace">{{ p.port }}</td>
+                            <td class="text-uppercase fs-8 fw-semibold text-secondary">{{ p.protocol }}</td>
+                            <td>
+                                {% if p.state == 'open' %}<span class="badge bg-success-soft text-success">open</span>
+                                {% elif p.state == 'filtered' %}<span class="badge bg-warning-soft text-warning">filtered</span>
+                                {% else %}<span class="badge bg-secondary-soft text-secondary">{{ p.state }}</span>{% endif %}
+                            </td>
+                            <td class="fw-semibold text-primary fs-8">{{ p.service }}</td>
+                            <td class="text-dark fs-8">{{ p.product }}</td>
+                            <td class="text-secondary font-monospace fs-8">{{ p.version }}</td>
+                            <td class="text-muted fs-8">{{ p.extra_info }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">
+                                <i class="fa-solid fa-network-wired fa-2x mb-2 d-block" style="opacity:0.3;"></i>
+                                No services detected.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================================
+         4. NSE Results Tab
+         ================================================================ -->
+    <div class="tab-pane fade" id="nse-pane" role="tabpanel" aria-labelledby="nse-tab">
+        <div class="card-saas p-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                <div>
+                    <h5 class="fw-bold mb-0 text-dark fs-7">
+                        <i class="fa-solid fa-scroll text-primary me-2"></i> NSE Script Execution Outputs
+                    </h5>
+                    <span class="text-secondary fs-8">Detailed information gathering telemetry per service</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    {% if scan.status == 'completed' %}
+                    <button class="btn btn-sm btn-primary" id="btnRunNSE" onclick="runPredefinedNSE()">
+                        <i class="fa-solid fa-play me-1"></i> Run NSE Script Analysis
+                    </button>
+                    {% endif %}
+                    <span class="badge bg-light text-dark font-monospace">{{ nse_results|length }} Script Entries</span>
+                </div>
+            </div>
+
+            {% if nse_results and nse_results|length > 0 %}
+            <div class="row g-3" id="nse-results-container">
+                {% for script in nse_results %}
+                <div class="col-12">
+                    <div class="border rounded-3 p-3 bg-white shadow-sm">
+                        <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <span class="badge bg-primary-soft text-primary font-monospace fw-bold fs-8">{{ script.script_id }}</span>
+                                {% if script.port_number %}
+                                <span class="badge bg-light text-secondary fs-9"><i class="fa-solid fa-plug me-1"></i> Port {{ script.port_number }}/{{ script.service }}</span>
+                                {% else %}
+                                <span class="badge bg-light text-secondary fs-9"><i class="fa-solid fa-network-wired me-1"></i> {{ script.service }}</span>
+                                {% endif %}
+                                {% if script.host %}
+                                <span class="font-monospace text-secondary fs-9">{{ script.host.ip_address }}</span>
+                                {% endif %}
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                {% if script.status == 'Completed' %}
+                                <span class="badge bg-success-soft text-success"><i class="fa-solid fa-circle-check me-1"></i> Completed</span>
+                                {% elif script.status == 'Skipped' %}
+                                <span class="badge bg-secondary-soft text-secondary"><i class="fa-solid fa-circle-minus me-1"></i> Skipped</span>
+                                {% elif script.status == 'Running' %}
+                                <span class="badge bg-warning-soft text-warning"><i class="fa-solid fa-spinner fa-spin me-1"></i> Running</span>
+                                {% elif script.status == 'Pending' %}
+                                <span class="badge bg-info-soft text-info"><i class="fa-solid fa-clock me-1"></i> Pending</span>
+                                {% else %}
+                                <span class="badge bg-danger-soft text-danger"><i class="fa-solid fa-circle-exclamation me-1"></i> Failed</span>
+                                {% endif %}
+                                <button class="btn btn-link btn-sm text-decoration-none p-0 fs-8 ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#nse-collapse-{{ script.id }}">
+                                    Toggle Output <i class="fa-solid fa-chevron-down ms-1"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="collapse show" id="nse-collapse-{{ script.id }}">
+                            <div class="mt-2 fs-9 text-secondary mb-2">
+                                <strong>Description:</strong> {{ script.description }}
+                                {% if script.error_message %}
+                                <div class="text-danger mt-1"><strong>Reason/Error:</strong> {{ script.error_message }}</div>
+                                {% endif %}
+                            </div>
+                            <pre class="bg-light p-3 rounded border font-monospace fs-9 text-dark mb-0" style="max-height: 200px; overflow-y: auto; white-space: pre-wrap;">{{ script.output }}</pre>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center text-muted py-4">
+                <i class="fa-solid fa-scroll fa-2x mb-2 d-block" style="opacity:0.3;"></i>
+                <p class="fw-semibold mb-1">No NSE results available.</p>
+                <p class="fs-8">Click "Run NSE Script Analysis" to run allowlisted scripts for the discovered services.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ================================================================
+         5. Findings Tab
+         ================================================================ -->
+    <div class="tab-pane fade" id="findings-pane" role="tabpanel" aria-labelledby="findings-tab">
+        <div class="card-saas p-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+                <div>
+                    <h5 class="fw-bold mb-0 text-dark fs-7">
+                        <i class="fa-solid fa-shield-virus text-danger me-2"></i> Security Findings
+                    </h5>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    {% if scan.status == 'completed' %}
+                    <button class="btn btn-sm btn-outline-primary" id="btnRunAnalyzer" onclick="runFindingsAnalyzer()">
+                        <i class="fa-solid fa-magnifying-glass-chart me-1"></i> Run Findings Analyzer
+                    </button>
+                    {% endif %}
+                    <span class="badge bg-light text-dark font-monospace">{{ findings|length }} Findings</span>
+                </div>
+            </div>
+
+            <!-- Severity Summary Bar -->
+            {% if findings|length > 0 %}
+            <div class="d-flex flex-wrap gap-3 mb-4 pb-3 border-bottom">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge-severity-high">HIGH</span>
+                    <span class="fw-bold text-dark">{{ findings_high }}</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge-severity-medium">MEDIUM</span>
+                    <span class="fw-bold text-dark">{{ findings_medium }}</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge-severity-low">LOW</span>
+                    <span class="fw-bold text-dark">{{ findings_low }}</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge-severity-info">INFO</span>
+                    <span class="fw-bold text-dark">{{ findings_info }}</span>
+                </div>
+                <div class="d-flex align-items-center gap-2 ms-auto">
+                    <span class="text-secondary fs-8">Total:</span>
+                    <span class="fw-bold text-dark">{{ findings|length }}</span>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="table-responsive">
+                <table class="table-saas-clean mb-0" id="findings-table">
+                    <thead>
+                        <tr>
+                            <th>Severity</th>
+                            <th>Finding</th>
+                            <th>Host</th>
+                            <th>Port</th>
+                            <th>Category</th>
+                            <th>Confidence</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for f in findings %}
+                        <tr>
+                            <td>
+                                {% if f.severity.upper() == 'HIGH' %}<span class="badge-severity-high">HIGH</span>
+                                {% elif f.severity.upper() == 'MEDIUM' %}<span class="badge-severity-medium">MEDIUM</span>
+                                {% elif f.severity.upper() == 'LOW' %}<span class="badge-severity-low">LOW</span>
+                                {% else %}<span class="badge-severity-info">INFO</span>{% endif %}
+                            </td>
+                            <td class="fw-bold text-dark">{{ f.title }}</td>
+                            <td class="font-monospace text-secondary fs-8">{{ f.host.ip_address if f.host else '—' }}</td>
+                            <td class="font-monospace text-dark fs-8">
+                                {% if f.port %}{{ f.port.port_number }}/{{ f.port.protocol }}{% else %}—{% endif %}
+                            </td>
+                            <td><span class="badge bg-light text-secondary fs-9">{{ f.category or '—' }}</span></td>
+                            <td><span class="badge {% if f.confidence == 'HIGH' %}bg-success-soft text-success{% else %}bg-warning-soft text-warning{% endif %} fs-9">{{ f.confidence }}</span></td>
+                            <td><span class="badge {% if f.observation_type == 'OBSERVED' %}bg-primary-soft text-primary{% else %}bg-secondary-soft text-secondary{% endif %} fs-9">{{ f.observation_type }}</span></td>
+                            <td><span class="badge {% if f.status == 'OPEN' %}bg-danger-soft text-danger{% elif f.status == 'ACKNOWLEDGED' %}bg-warning-soft text-warning{% else %}bg-success-soft text-success{% endif %} fs-9">{{ f.status }}</span></td>
+                            <td>
+                                <button type="button" class="btn btn-outline-primary btn-xs btn-view-finding" data-finding-id="{{ f.id }}" title="View Details">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="9" class="text-center text-muted py-4">
+                                <i class="fa-solid fa-shield-virus fa-2x mb-2 d-block" style="opacity:0.3;"></i>
+                                No findings generated for this scan.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================================================================
+     Finding Detail Modal
+     ================================================================ -->
+<div class="modal fade" id="findingDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold text-dark fs-6" id="findingDetailTitle">
+                    <i class="fa-solid fa-shield-virus text-danger me-2"></i> Finding Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="findingDetailContent">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================================================================
+     Delete Confirmation Modal
+     ================================================================ -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-danger fs-6">
+                    <i class="fa-solid fa-triangle-exclamation me-2"></i> Confirm Deletion
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-2">Are you sure you want to delete <strong>Scan #{{ scan.id }}</strong>?</p>
+                <p class="text-secondary fs-8 mb-3">Target: <code>{{ scan.target }}</code></p>
+                <div class="alert alert-warning p-2 fs-8 mb-0">
+                    <i class="fa-solid fa-circle-exclamation me-1"></i> This will permanently remove the scan, all hosts, ports, NSE results, and findings.
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger btn-sm" id="btnConfirmDeleteScan">
+                    <i class="fa-solid fa-trash me-1"></i> Delete Scan
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================================================================
+     Raw XML Modal
+     ================================================================ -->
+{% if scan.xml_path %}
+<div class="modal fade" id="xmlMetadataModal" tabindex="-1" aria-labelledby="xmlMetadataModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold text-dark fs-6" id="xmlMetadataModalLabel">
+                    <i class="fa-solid fa-file-code text-primary me-2"></i> XML Artifact Viewer — Scan #{{ scan.id }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body bg-light">
+                <div class="d-flex justify-content-between align-items-center mb-2 fs-8">
+                    <span class="text-secondary">Source File: <code>scans/{{ scan.id }}/result.xml</code></span>
+                    <a href="{{ url_for('scans.raw_xml', scan_id=scan.id, download=1) }}" class="btn btn-sm btn-outline-primary py-0 px-2 fs-9">
+                        <i class="fa-solid fa-download me-1"></i> Download XML
+                    </a>
+                </div>
+                <iframe src="{{ url_for('scans.raw_xml', scan_id=scan.id) }}" style="width:100%; height: 400px; border:1px solid #e2e8f0; border-radius: 6px; background:#ffffff;"></iframe>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const SCAN_ID = {{ scan.id }};
+const CSRF_TOKEN = '{{ csrf_token() }}';
+let currentPortState = 'all';
+
+// --- Port Filtering ---
+function filterPorts(state, btn) {
+    currentPortState = state.toLowerCase();
+    const btns = document.querySelectorAll('#port-filter-buttons button');
+    btns.forEach(function(b) {
+        b.classList.remove('btn-primary', 'active');
+        b.classList.add('btn-outline-secondary');
+    });
+    btn.classList.remove('btn-outline-secondary');
+    btn.classList.add('btn-primary', 'active');
+    searchPorts();
+}
+
+function searchPorts() {
+    const query = document.getElementById('port-search-input').value.toLowerCase().trim();
+    const rows = document.querySelectorAll('#ports-table tbody .port-row');
+    rows.forEach(function(row) {
+        const rowState = row.getAttribute('data-state') || '';
+        const rowService = row.getAttribute('data-service') || '';
+        const rowText = row.innerText.toLowerCase();
+        const matchesState = (currentPortState === 'all') || (rowState === currentPortState);
+        const matchesQuery = !query || rowText.includes(query) || rowService.includes(query);
+        row.style.display = (matchesState && matchesQuery) ? '' : 'none';
+    });
+}
+
+// --- Host Search ---
+var hostSearchEl = document.getElementById('host-search-input');
+if (hostSearchEl) {
+    hostSearchEl.addEventListener('keyup', function() {
+        var q = this.value.toLowerCase().trim();
+        var rows = document.querySelectorAll('#hosts-table tbody .host-row');
+        rows.forEach(function(row) {
+            var text = row.innerText.toLowerCase();
+            var visible = (!q || text.includes(q));
+            row.style.display = visible ? '' : 'none';
+            // Also hide/show detail rows
+            var hostId = row.getAttribute('data-host-id');
+            var detailRow = document.getElementById('host-detail-' + hostId);
+            if (detailRow && !visible) detailRow.style.display = 'none';
+        });
+    });
+}
+
+// --- Host Detail Toggle ---
+document.querySelectorAll('.btn-toggle-host-detail').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        var hostId = this.getAttribute('data-host-id');
+        var detailRow = document.getElementById('host-detail-' + hostId);
+        if (detailRow) {
+            var isVisible = detailRow.style.display !== 'none';
+            detailRow.style.display = isVisible ? 'none' : '';
+            this.innerHTML = isVisible ?
+                '<i class="fa-solid fa-chevron-down"></i> Details' :
+                '<i class="fa-solid fa-chevron-up"></i> Hide';
+        }
+    });
+});
+
+// --- Run NSE ---
+function runPredefinedNSE() {
+    var btn = document.getElementById('btnRunNSE');
+    var originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Running...';
+
+    fetch('/api/scans/' + SCAN_ID + '/nse', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+        body: JSON.stringify({ run: true })
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+        if (data.success) { window.location.reload(); }
+        else {
+            alert(data.message || 'Failed to trigger NSE Analysis.');
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    })
+    .catch(function(err) {
+        console.error('Error running NSE:', err);
+        alert('An unexpected error occurred during execution.');
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    });
+}
+
+// --- Run Findings Analyzer ---
+function runFindingsAnalyzer() {
+    var btn = document.getElementById('btnRunAnalyzer');
+    var originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Analyzing...';
+
+    fetch('/api/scans/' + SCAN_ID + '/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+        body: JSON.stringify({})
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+        if (data.success) { window.location.reload(); }
+        else {
+            alert(data.message || 'Failed to run findings analysis.');
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    })
+    .catch(function(err) {
+        console.error('Error running analyzer:', err);
+        alert('An unexpected error occurred.');
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    });
+}
+
+// --- Rescan ---
+function rescanFromCurrent() {
+    if (!confirm('Create a new scan with the same target ({{ scan.target }}) and profile?')) return;
+
+    fetch('/api/scans/' + SCAN_ID + '/rescan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+        body: JSON.stringify({})
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+        if (data.success && data.redirect_url) {
+            window.location.href = data.redirect_url;
+        } else {
+            alert(data.message || 'Failed to initiate rescan.');
+        }
+    })
+    .catch(function(err) {
+        console.error('Rescan error:', err);
+        alert('An unexpected error occurred while initiating the rescan.');
+    });
+}
+
+// --- Delete Scan ---
+function showDeleteModal() {
+    var modalEl = document.getElementById('deleteConfirmModal');
+    if (modalEl && typeof bootstrap !== 'undefined') {
+        var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.show();
+    }
+}
+
+document.getElementById('btnConfirmDeleteScan').addEventListener('click', function() {
+    var btn = this;
+    var origText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Deleting...';
+
+    fetch('/api/scans/' + SCAN_ID, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN }
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+        if (data.success) {
+            window.location.href = "{{ url_for('scans.scan_history') }}";
+        } else {
+            alert(data.message || 'Failed to delete scan.');
+            btn.disabled = false;
+            btn.innerHTML = origText;
+        }
+    })
+    .catch(function(err) {
+        console.error('Delete error:', err);
+        alert('An unexpected error occurred.');
+        btn.disabled = false;
+        btn.innerHTML = origText;
+    });
+});
+
+// --- Finding Detail Modal ---
+// --- Finding Detail Modal ---
+function getFindingModal() {
+    var modalEl = document.getElementById('findingDetailModal');
+    if (!modalEl || typeof bootstrap === 'undefined') return null;
+    return bootstrap.Modal.getOrCreateInstance(modalEl);
+}
+
+document.querySelectorAll('.btn-view-finding').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        var findingId = this.getAttribute('data-finding-id');
+        var contentEl = document.getElementById('findingDetailContent');
+        contentEl.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary"></div></div>';
+        var modal = getFindingModal();
+        if (modal) modal.show();
+
+        fetch('/api/scans/' + SCAN_ID + '/findings/' + findingId, {
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(f) {
+            if (f.error) {
+                contentEl.innerHTML = '<div class="alert alert-danger">' + f.error + '</div>';
+                return;
+            }
+
+            var sevBadge = '';
+            var sevUpper = (f.severity || 'info').toUpperCase();
+            if (sevUpper === 'HIGH') sevBadge = '<span class="badge-severity-high">HIGH</span>';
+            else if (sevUpper === 'MEDIUM') sevBadge = '<span class="badge-severity-medium">MEDIUM</span>';
+            else if (sevUpper === 'LOW') sevBadge = '<span class="badge-severity-low">LOW</span>';
+            else sevBadge = '<span class="badge-severity-info">INFO</span>';
+
+            var html = '<div class="mb-3">' +
+                '<div class="d-flex align-items-center gap-2 mb-2">' + sevBadge +
+                '<h6 class="fw-bold text-dark mb-0">' + escapeHtml(f.title || '') + '</h6></div></div>' +
+                '<table class="table table-sm table-borderless fs-8 mb-3">' +
+                '<tr><td class="text-secondary" style="width:140px;">Rule ID</td><td class="fw-semibold">' + escapeHtml(f.rule_id || '—') + '</td></tr>' +
+                '<tr><td class="text-secondary">Category</td><td>' + escapeHtml(f.category || '—') + '</td></tr>' +
+                '<tr><td class="text-secondary">Confidence</td><td><span class="badge ' + (f.confidence === 'HIGH' ? 'bg-success-soft text-success' : 'bg-warning-soft text-warning') + '">' + escapeHtml(f.confidence || '') + '</span></td></tr>' +
+                '<tr><td class="text-secondary">Observation Type</td><td>' + escapeHtml(f.observation_type || '') + '</td></tr>' +
+                '<tr><td class="text-secondary">Status</td><td><span class="badge ' + (f.status === 'OPEN' ? 'bg-danger-soft text-danger' : (f.status === 'ACKNOWLEDGED' ? 'bg-warning-soft text-warning' : 'bg-success-soft text-success')) + '">' + escapeHtml(f.status || '') + '</span></td></tr>' +
+                '<tr><td class="text-secondary">Host</td><td class="font-monospace">' + escapeHtml(f.host_ip || '—') + (f.hostname ? ' (' + escapeHtml(f.hostname) + ')' : '') + '</td></tr>' +
+                '<tr><td class="text-secondary">Port / Service</td><td class="font-monospace">' + escapeHtml(f.port_info || '—') + ' / ' + escapeHtml(f.service || '—') + '</td></tr>' +
+                '</table>';
+
+            if (f.description) {
+                html += '<div class="mb-3"><h6 class="fw-bold text-dark fs-8 mb-1">Description</h6><p class="text-secondary fs-8 mb-0">' + escapeHtml(f.description) + '</p></div>';
+            }
+            if (f.evidence) {
+                html += '<div class="mb-3"><h6 class="fw-bold text-dark fs-8 mb-1">Evidence</h6><pre class="bg-light p-2 rounded border font-monospace fs-9 mb-0" style="white-space:pre-wrap;max-height:200px;overflow-y:auto;">' + escapeHtml(f.evidence) + '</pre></div>';
+            }
+            if (f.remediation || f.recommendation) {
+                html += '<div class="mb-0"><h6 class="fw-bold text-dark fs-8 mb-1">Remediation</h6><p class="text-secondary fs-8 mb-0">' + escapeHtml(f.remediation || f.recommendation || '') + '</p></div>';
+            }
+
+            contentEl.innerHTML = html;
+        })
+        .catch(function(err) {
+            console.error('Error loading finding:', err);
+            contentEl.innerHTML = '<div class="alert alert-danger">Failed to load finding details.</div>';
+        });
+    });
+});
+
+function escapeHtml(text) {
+    if (!text) return '';
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(text));
+    return div.innerHTML;
+}
+
+// --- Charts ---
+document.addEventListener('DOMContentLoaded', function() {
+    // Ports by State Chart
+    var portsCanvas = document.getElementById('chartPortsByState');
+    if (portsCanvas && typeof Chart !== 'undefined') {
+        new Chart(portsCanvas.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Open', 'Filtered', 'Closed'],
+                datasets: [{
+                    data: [{{ scan_stats.open_ports }}, {{ scan_stats.filtered_ports }}, {{ scan_stats.closed_ports }}],
+                    backgroundColor: ['#10B981', '#F59E0B', '#94A3B8'],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                cutout: '65%',
+                plugins: {
+                    legend: { display: true, position: 'bottom', labels: { font: { size: 10 }, padding: 8, usePointStyle: true, pointStyleWidth: 8 } }
+                }
+            }
+        });
+    }
+
+    // Findings by Severity Chart
+    var findingsCanvas = document.getElementById('chartFindingsBySeverity');
+    if (findingsCanvas && typeof Chart !== 'undefined') {
+        new Chart(findingsCanvas.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: ['High', 'Medium', 'Low', 'Info'],
+                datasets: [{
+                    data: [{{ findings_high }}, {{ findings_medium }}, {{ findings_low }}, {{ findings_info }}],
+                    backgroundColor: ['#EF4444', '#F59E0B', '#EAB308', '#3B82F6'],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                cutout: '65%',
+                plugins: {
+                    legend: { display: true, position: 'bottom', labels: { font: { size: 10 }, padding: 8, usePointStyle: true, pointStyleWidth: 8 } }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

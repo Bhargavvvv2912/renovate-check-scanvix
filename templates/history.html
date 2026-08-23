@@ -1,0 +1,353 @@
+{% extends "base.html" %}
+
+{% block title %}Scan History — NMAP Security Suite{% endblock %}
+{% block page_title %}Scan History & Archives{% endblock %}
+{% block page_subtitle %}Search, filter, and review all historical security assessments · Assessment History{% endblock %}
+
+{% block content %}
+<div class="card-saas p-4 mb-4">
+    <!-- Header Row -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h5 class="fw-bold mb-1" style="color: var(--text-main); font-size: 1rem;">
+                <i class="fa-solid fa-clock-rotate-left text-primary me-2"></i> Scan Archives
+            </h5>
+            <span class="text-secondary fs-8">
+                {% if pagination.total > 0 %}
+                    Showing {{ ((pagination.page - 1) * per_page) + 1 }}–{{ [pagination.page * per_page, pagination.total] | min }} of {{ pagination.total }} scans
+                {% else %}
+                    No scans found
+                {% endif %}
+            </span>
+        </div>
+        <a href="{{ url_for('scans.new_scan') }}" class="btn btn-primary btn-sm">
+            <i class="fa-solid fa-plus me-1"></i> New Scan
+        </a>
+    </div>
+
+    <!-- Search & Filter Bar -->
+    <div class="d-flex flex-wrap align-items-end gap-3 mb-4 pb-3 border-bottom">
+        <!-- Search -->
+        <div style="flex: 1; min-width: 220px;">
+            <label class="form-label fs-9 text-uppercase fw-semibold text-secondary mb-1">Search</label>
+            <div class="input-group input-group-sm">
+                <span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                <input type="text" id="historySearchInput" class="form-control border-start-0"
+                       placeholder="Search target, scan ID, profile..."
+                       value="{{ search_query }}" autocomplete="off">
+            </div>
+        </div>
+
+        <!-- Status Filter -->
+        <div style="min-width: 140px;">
+            <label class="form-label fs-9 text-uppercase fw-semibold text-secondary mb-1">Status</label>
+            <select id="historyStatusFilter" class="form-select form-select-sm">
+                <option value="">All Statuses</option>
+                <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
+                <option value="running" {% if status_filter == 'running' %}selected{% endif %}>Running</option>
+                <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="failed" {% if status_filter == 'failed' %}selected{% endif %}>Failed</option>
+                <option value="timeout" {% if status_filter == 'timeout' %}selected{% endif %}>Timeout</option>
+                <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
+            </select>
+        </div>
+
+        <!-- Profile Filter -->
+        <div style="min-width: 180px;">
+            <label class="form-label fs-9 text-uppercase fw-semibold text-secondary mb-1">Profile</label>
+            <select id="historyProfileFilter" class="form-select form-select-sm">
+                <option value="">All Profiles</option>
+                {% for pid, prof in profiles.items() %}
+                <option value="{{ pid }}" {% if profile_filter == pid %}selected{% endif %}>{{ prof.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Sort -->
+        <div style="min-width: 150px;">
+            <label class="form-label fs-9 text-uppercase fw-semibold text-secondary mb-1">Sort By</label>
+            <select id="historySortBy" class="form-select form-select-sm">
+                <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Newest First</option>
+                <option value="oldest" {% if sort_by == 'oldest' %}selected{% endif %}>Oldest First</option>
+                <option value="target" {% if sort_by == 'target' %}selected{% endif %}>Target</option>
+                <option value="duration" {% if sort_by == 'duration' %}selected{% endif %}>Duration</option>
+                <option value="findings" {% if sort_by == 'findings' %}selected{% endif %}>Findings Count</option>
+                <option value="status" {% if sort_by == 'status' %}selected{% endif %}>Status</option>
+            </select>
+        </div>
+
+        <!-- Apply Button -->
+        <div>
+            <label class="form-label fs-9 mb-1">&nbsp;</label>
+            <button type="button" id="btnApplyFilters" class="btn btn-primary btn-sm d-block">
+                <i class="fa-solid fa-filter me-1"></i> Apply
+            </button>
+        </div>
+    </div>
+
+    <!-- Scan Table -->
+    <div class="table-responsive">
+        <table class="table-saas-clean mb-0" id="history-table">
+            <thead>
+                <tr>
+                    <th>Scan ID</th>
+                    <th>Target</th>
+                    <th>Profile</th>
+                    <th>Status</th>
+                    <th>Hosts</th>
+                    <th>Open Ports</th>
+                    <th>Findings</th>
+                    <th>Started</th>
+                    <th>Duration</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if scans and scans|length > 0 %}
+                    {% for scan in scans %}
+                    <tr>
+                        <td class="fw-bold text-secondary">#{{ scan.id }}</td>
+                        <td>
+                            <div class="target-cell">
+                                <i class="fa-solid fa-globe text-muted fs-8"></i>
+                                <span class="font-monospace">{{ scan.target }}</span>
+                            </div>
+                        </td>
+                        <td class="text-secondary fs-8">{{ scan.scan_profile.replace('_', ' ').title() }}</td>
+                        <td>
+                            {% if scan.status == 'completed' %}
+                            <span class="badge-status-completed">Completed</span>
+                            {% elif scan.status == 'running' %}
+                            <span class="badge bg-primary-soft text-primary"><i class="fa-solid fa-spinner fa-spin me-1"></i>Running</span>
+                            {% elif scan.status == 'pending' %}
+                            <span class="badge bg-info-soft text-info"><i class="fa-solid fa-clock me-1"></i>Pending</span>
+                            {% elif scan.status == 'timeout' %}
+                            <span class="badge bg-warning-soft text-warning">Timeout</span>
+                            {% elif scan.status == 'cancelled' %}
+                            <span class="badge bg-secondary-soft text-secondary">Cancelled</span>
+                            {% else %}
+                            <span class="badge bg-danger-soft text-danger">{{ scan.status.capitalize() }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="fw-semibold text-dark">{{ scan.number_of_hosts if scan.number_of_hosts is not none else scan.hosts|length }}</td>
+                        <td class="fw-semibold text-success">{{ scan.number_of_open_ports if scan.number_of_open_ports is not none else 0 }}</td>
+                        <td>
+                            {% set fc = scan.number_of_findings if scan.number_of_findings is not none else scan.findings|length %}
+                            {% if fc > 0 %}
+                            <span class="fw-semibold text-danger">{{ fc }}</span>
+                            {% else %}
+                            <span class="text-muted">0</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-secondary fs-8">{{ scan.start_time.strftime('%b %d, %Y %I:%M %p') if scan.start_time else 'N/A' }}</td>
+                        <td class="text-secondary fs-8">{% if scan.duration %}{{ '%.1f'|format(scan.duration) }}s{% else %}—{% endif %}</td>
+                        <td>
+                            <div class="d-flex gap-1">
+                                {% if scan.status in ['completed', 'failed', 'timeout', 'cancelled'] %}
+                                <a href="{{ url_for('scans.scan_results', scan_id=scan.id) }}" class="btn btn-outline-primary btn-xs" title="View Results">
+                                    <i class="fa-solid fa-eye"></i>
+                                </a>
+                                {% elif scan.status == 'running' %}
+                                <a href="{{ url_for('scans.scan_progress', scan_id=scan.id) }}" class="btn btn-outline-primary btn-xs" title="View Progress">
+                                    <i class="fa-solid fa-spinner fa-spin"></i>
+                                </a>
+                                {% endif %}
+                                <button type="button" class="btn btn-outline-danger btn-xs btn-delete-scan" data-scan-id="{{ scan.id }}" data-scan-target="{{ scan.target }}" title="Delete Scan">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="10" class="text-center py-5">
+                            <div class="text-muted">
+                                <i class="fa-solid fa-folder-open fa-2x mb-3 d-block text-secondary" style="opacity: 0.4;"></i>
+                                {% if search_query or status_filter or profile_filter %}
+                                    <p class="fw-semibold mb-1">No scans match your filters.</p>
+                                    <p class="fs-8">Try adjusting your search criteria or clearing filters.</p>
+                                    <a href="{{ url_for('scans.scan_history') }}" class="btn btn-outline-primary btn-sm mt-2">
+                                        <i class="fa-solid fa-times me-1"></i> Clear Filters
+                                    </a>
+                                {% else %}
+                                    <p class="fw-semibold mb-1">No scan history yet.</p>
+                                    <p class="fs-8">Start your first security assessment to see results here.</p>
+                                    <a href="{{ url_for('scans.new_scan') }}" class="btn btn-primary btn-sm mt-2">
+                                        <i class="fa-solid fa-plus me-1"></i> Start First Scan
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if pagination.pages > 1 %}
+    <div class="d-flex flex-wrap justify-content-between align-items-center mt-4 pt-3 border-top gap-3">
+        <span class="text-secondary fs-8">
+            Showing {{ ((pagination.page - 1) * per_page) + 1 }}–{{ [pagination.page * per_page, pagination.total] | min }} of {{ pagination.total }} scans
+        </span>
+        <nav aria-label="Scan history pagination">
+            <ul class="pagination pagination-sm mb-0">
+                <!-- Previous -->
+                <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('scans.scan_history', page=pagination.prev_num, q=search_query, status=status_filter, profile=profile_filter, sort=sort_by, per_page=per_page) if pagination.has_prev else '#' }}">
+                        <i class="fa-solid fa-chevron-left fs-9"></i> Previous
+                    </a>
+                </li>
+
+                <!-- Page Numbers -->
+                {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                    {% if p %}
+                        <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                            <a class="page-link" href="{{ url_for('scans.scan_history', page=p, q=search_query, status=status_filter, profile=profile_filter, sort=sort_by, per_page=per_page) }}">{{ p }}</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">…</span></li>
+                    {% endif %}
+                {% endfor %}
+
+                <!-- Next -->
+                <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('scans.scan_history', page=pagination.next_num, q=search_query, status=status_filter, profile=profile_filter, sort=sort_by, per_page=per_page) if pagination.has_next else '#' }}">
+                        Next <i class="fa-solid fa-chevron-right fs-9"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-danger fs-6">
+                    <i class="fa-solid fa-triangle-exclamation me-2"></i> Confirm Deletion
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-2">Are you sure you want to delete scan <strong id="deleteModalScanId"></strong>?</p>
+                <p class="text-secondary fs-8 mb-3">Target: <code id="deleteModalTarget"></code></p>
+                <div class="alert alert-warning p-2 fs-8 mb-0">
+                    <i class="fa-solid fa-circle-exclamation me-1"></i>
+                    This will permanently remove:
+                    <ul class="mb-0 mt-1 ps-3">
+                        <li>Scan record</li>
+                        <li>All discovered hosts</li>
+                        <li>All port information</li>
+                        <li>All NSE results</li>
+                        <li>All security findings</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger btn-sm" id="btnConfirmDelete">
+                    <i class="fa-solid fa-trash me-1"></i> Delete Scan
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    // --- Filter Application ---
+    function applyFilters() {
+        const q = document.getElementById('historySearchInput').value.trim();
+        const status = document.getElementById('historyStatusFilter').value;
+        const profile = document.getElementById('historyProfileFilter').value;
+        const sort = document.getElementById('historySortBy').value;
+
+        const params = new URLSearchParams();
+        if (q) params.set('q', q);
+        if (status) params.set('status', status);
+        if (profile) params.set('profile', profile);
+        if (sort && sort !== 'newest') params.set('sort', sort);
+
+        window.location.href = "{{ url_for('scans.scan_history') }}" + (params.toString() ? '?' + params.toString() : '');
+    }
+
+    document.getElementById('btnApplyFilters').addEventListener('click', applyFilters);
+
+    // Debounced search on Enter key
+    document.getElementById('historySearchInput').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            applyFilters();
+        }
+    });
+
+    // Filter dropdowns auto-apply on change
+    document.getElementById('historyStatusFilter').addEventListener('change', applyFilters);
+    document.getElementById('historyProfileFilter').addEventListener('change', applyFilters);
+    document.getElementById('historySortBy').addEventListener('change', applyFilters);
+
+
+    // --- Delete Scan ---
+    let deleteScanId = null;
+    function getDeleteModal() {
+        var modalEl = document.getElementById('deleteConfirmModal');
+        if (!modalEl || typeof bootstrap === 'undefined') return null;
+        return bootstrap.Modal.getOrCreateInstance(modalEl);
+    }
+
+    document.querySelectorAll('.btn-delete-scan').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            deleteScanId = this.getAttribute('data-scan-id');
+            const target = this.getAttribute('data-scan-target');
+            document.getElementById('deleteModalScanId').textContent = '#' + deleteScanId;
+            document.getElementById('deleteModalTarget').textContent = target;
+            const modal = getDeleteModal();
+            if (modal) modal.show();
+        });
+    });
+
+    document.getElementById('btnConfirmDelete').addEventListener('click', function() {
+        if (!deleteScanId) return;
+        const btn = this;
+        const origText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Deleting...';
+
+        fetch('/api/scans/' + deleteScanId, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            }
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            const modal = getDeleteModal();
+            if (modal) modal.hide();
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert(data.message || 'Failed to delete scan.');
+                btn.disabled = false;
+                btn.innerHTML = origText;
+            }
+        })
+        .catch(function(err) {
+            console.error('Delete error:', err);
+            alert('An unexpected error occurred.');
+            btn.disabled = false;
+            btn.innerHTML = origText;
+            const modal = getDeleteModal();
+            if (modal) modal.hide();
+        });
+    });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,401 @@
+{% extends "base.html" %}
+
+{% block title %}Findings — NMAP Security Suite{% endblock %}
+{% block page_title %}Security Findings & Observations{% endblock %}
+{% block page_subtitle %}Observed security posture findings and remediation guidance{% endblock %}
+
+{% block content %}
+<!-- Severity Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-2 col-sm-4 col-6">
+        <div class="card-saas p-3 text-center border-start border-4 border-dark">
+            <span class="text-secondary fs-8 fw-medium">Total Findings</span>
+            <h3 class="text-dark mb-0 fw-bold mt-1" id="kpi-total">{{ findings|length }}</h3>
+        </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-6">
+        <div class="card-saas p-3 text-center border-start border-4 border-danger">
+            <span class="text-secondary fs-8 fw-medium">High Severity</span>
+            <h3 class="text-danger mb-0 fw-bold mt-1" id="kpi-high">{{ high_count }}</h3>
+        </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-6">
+        <div class="card-saas p-3 text-center border-start border-4 border-warning">
+            <span class="text-secondary fs-8 fw-medium">Medium Severity</span>
+            <h3 class="text-warning mb-0 fw-bold mt-1" id="kpi-medium">{{ medium_count }}</h3>
+        </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-6">
+        <div class="card-saas p-3 text-center border-start border-4 border-amber" style="border-left-color: #f59e0b !important;">
+            <span class="text-secondary fs-8 fw-medium">Low Severity</span>
+            <h3 class="mb-0 fw-bold mt-1" style="color: #f59e0b;" id="kpi-low">{{ low_count }}</h3>
+        </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-6">
+        <div class="card-saas p-3 text-center border-start border-4 border-primary">
+            <span class="text-secondary fs-8 fw-medium">Informational</span>
+            <h3 class="text-primary mb-0 fw-bold mt-1" id="kpi-info">{{ info_count }}</h3>
+        </div>
+    </div>
+</div>
+
+<!-- Findings Filter Panel -->
+<div class="card-saas p-4 mb-4">
+    <h5 class="fw-bold mb-3 text-dark fs-7">
+        <i class="fa-solid fa-filter text-primary me-2"></i> Filter Findings
+    </h5>
+    <form id="findingsFilterForm" class="row g-3">
+        <div class="col-md-3">
+            <label for="searchQuery" class="form-label">Search</label>
+            <div class="input-group input-group-sm">
+                <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
+                <input type="text" class="form-control border-start-0" id="searchQuery" placeholder="Search title, rule, evidence...">
+            </div>
+        </div>
+        <div class="col-md-2">
+            <label for="filterSeverity" class="form-label">Severity</label>
+            <select class="form-select form-select-sm" id="filterSeverity">
+                <option value="">All Severities</option>
+                <option value="HIGH">High</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="LOW">Low</option>
+                <option value="INFO">Informational</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label for="filterCategory" class="form-label">Category</label>
+            <select class="form-select form-select-sm" id="filterCategory">
+                <option value="">All Categories</option>
+                <option value="Service Exposure">Service Exposure</option>
+                <option value="Encryption">Encryption</option>
+                <option value="Protocol Security">Protocol Security</option>
+                <option value="SSH Security">SSH Security</option>
+                <option value="Network Security">Network Security</option>
+                <option value="Information Disclosure">Information Disclosure</option>
+            </select>
+        </div>
+        <div class="col-md-1.5 col-sm-4">
+            <label for="filterObsType" class="form-label">Obs. Type</label>
+            <select class="form-select form-select-sm" id="filterObsType">
+                <option value="">All Types</option>
+                <option value="OBSERVED">Observed</option>
+                <option value="POTENTIAL">Potential</option>
+            </select>
+        </div>
+        <div class="col-md-1.5 col-sm-4">
+            <label for="filterConfidence" class="form-label">Confidence</label>
+            <select class="form-select form-select-sm" id="filterConfidence">
+                <option value="">All</option>
+                <option value="HIGH">High</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="LOW">Low</option>
+            </select>
+        </div>
+        <div class="col-md-2 col-sm-4">
+            <label for="filterHost" class="form-label">Host IP</label>
+            <input type="text" class="form-control form-control-sm" id="filterHost" placeholder="e.g. 127.0.0.1">
+        </div>
+    </form>
+</div>
+
+<!-- Findings list -->
+<div class="card-saas p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0 text-dark fs-7">
+            <i class="fa-solid fa-shield-virus text-danger me-2"></i> Identified Security Observations
+        </h5>
+        <span class="badge bg-light text-dark font-monospace" id="findings-table-count">{{ findings|length }} Findings</span>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table-saas-clean mb-0" id="findings-table">
+            <thead>
+                <tr>
+                    <th>Severity</th>
+                    <th>Finding Title</th>
+                    <th>Host / Target</th>
+                    <th>Port / Service</th>
+                    <th>Category</th>
+                    <th>Confidence</th>
+                    <th>Observation</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="findings-tbody">
+                {% for f in findings %}
+                <tr style="cursor: pointer;" onclick="showFindingDetails({{ f.to_dict() | tojson | forceescape }})">
+                    <td>
+                        {% if f.severity.upper() == 'HIGH' %}
+                        <span class="badge-severity-high">HIGH</span>
+                        {% elif f.severity.upper() == 'MEDIUM' %}
+                        <span class="badge-severity-medium">MEDIUM</span>
+                        {% elif f.severity.upper() == 'LOW' %}
+                        <span class="badge-severity-low">LOW</span>
+                        {% else %}
+                        <span class="badge-severity-info">INFO</span>
+                        {% endif %}
+                    </td>
+                    <td class="fw-semibold text-dark">{{ f.title }}</td>
+                    <td class="font-monospace text-secondary fs-8">{{ f.host.ip_address }}</td>
+                    <td class="font-monospace text-dark fs-8">
+                        {% if f.port %}
+                        {{ f.port.port_number }}/{{ f.port.protocol }} ({{ f.port.service }})
+                        {% else %}
+                        —
+                        {% endif %}
+                    </td>
+                    <td><span class="badge bg-light text-secondary fs-9">{{ f.category }}</span></td>
+                    <td>
+                        <span class="badge {% if f.confidence == 'HIGH' %}bg-success-soft text-success{% else %}bg-warning-soft text-warning{% endif %} fs-9">{{ f.confidence }}</span>
+                    </td>
+                    <td>
+                        <span class="badge {% if f.observation_type == 'OBSERVED' %}bg-primary-soft text-primary{% else %}bg-secondary-soft text-secondary{% endif %} fs-9">{{ f.observation_type }}</span>
+                    </td>
+                    <td>
+                        <span class="badge {% if f.status == 'RESOLVED' %}bg-success text-white{% elif f.status == 'ACKNOWLEDGED' %}bg-info text-white{% else %}bg-secondary text-white{% endif %} fs-9">{{ f.status }}</span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary py-0 px-2 fs-9">
+                            <i class="fa-solid fa-magnifying-glass"></i> Inspect
+                        </button>
+                    </td>
+                </tr>
+                {% else %}
+                <tr id="no-findings-row">
+                    <td colspan="9" class="text-center text-muted py-5">
+                        <i class="fa-solid fa-shield-halved fa-2x mb-3 text-muted"></i>
+                        <p class="mb-0">No analyzed findings yet. Run a scan to discover target security observations.</p>
+                        <span class="text-secondary fs-8 mt-1 block">NSE results will be analyzed by the Findings Engine.</span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Finding Details Modal -->
+<div class="modal fade" id="findingDetailsModal" tabindex="-1" aria-labelledby="findingDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title fw-bold text-dark fs-6" id="findingDetailsModalLabel">
+                    <i class="fa-solid fa-shield-virus text-danger me-2"></i> Security Finding Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom flex-wrap gap-2">
+                    <div>
+                        <h4 class="text-dark fw-bold mb-1" id="modal-finding-title">Potential Cleartext HTTP</h4>
+                        <span class="badge bg-secondary font-monospace" id="modal-finding-rule">NMAP-HTTP-001</span>
+                        <span class="badge bg-light text-secondary ms-1" id="modal-finding-category">Encryption</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span id="modal-finding-severity"></span>
+                        <span id="modal-finding-obs"></span>
+                        <span id="modal-finding-conf"></span>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-4 fs-8">
+                    <div class="col-md-4">
+                        <span class="text-secondary fw-semibold">Host Target:</span>
+                        <div class="font-monospace text-dark mt-1" id="modal-finding-host">127.0.0.1</div>
+                    </div>
+                    <div class="col-md-4">
+                        <span class="text-secondary fw-semibold">Port / Service:</span>
+                        <div class="font-monospace text-dark mt-1" id="modal-finding-port">80/TCP (http)</div>
+                    </div>
+                    <div class="col-md-4">
+                        <span class="text-secondary fw-semibold">Auditor Status:</span>
+                        <div class="mt-1 d-flex align-items-center gap-2">
+                            <span class="badge bg-secondary text-white" id="modal-status-badge">OPEN</span>
+                            <select class="form-select form-select-sm py-0 px-2" id="modal-status-select" style="max-width: 150px; font-size:0.75rem;">
+                                <option value="OPEN">OPEN</option>
+                                <option value="ACKNOWLEDGED">ACKNOWLEDGED</option>
+                                <option value="RESOLVED">RESOLVED</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <h6 class="fw-bold text-dark fs-8 mb-1"><i class="fa-solid fa-align-left text-primary me-1"></i> Description:</h6>
+                    <p class="text-secondary fs-8 mb-0" id="modal-finding-desc">Cleartext HTTP transmits traffic without encryption.</p>
+                </div>
+
+                <div class="mb-3">
+                    <h6 class="fw-bold text-dark fs-8 mb-1"><i class="fa-solid fa-code text-primary me-1"></i> Evidence:</h6>
+                    <pre class="bg-light p-3 rounded border font-monospace fs-9 text-dark mb-0 style-scroll" id="modal-finding-evidence" style="max-height: 180px; overflow-y: auto; white-space: pre-wrap;"></pre>
+                </div>
+
+                <div class="mb-0">
+                    <h6 class="fw-bold text-dark fs-8 mb-1"><i class="fa-solid fa-wrench text-success me-1"></i> Remediation Guidance:</h6>
+                    <div class="alert alert-success-soft p-3 mb-0 fs-8 text-dark" id="modal-finding-remediation" style="border-left: 4px solid var(--bs-success);">
+                        Use HTTPS.
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let findingDetailsModalObj = null;
+    let activeFindingId = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        findingDetailsModalObj = new bootstrap.Modal(document.getElementById('findingDetailsModal'));
+        
+        const searchInput = document.getElementById('searchQuery');
+        const filterSeverity = document.getElementById('filterSeverity');
+        const filterCategory = document.getElementById('filterCategory');
+        const filterObsType = document.getElementById('filterObsType');
+        const filterConfidence = document.getElementById('filterConfidence');
+        const filterHost = document.getElementById('filterHost');
+        const statusSelect = document.getElementById('modal-status-select');
+
+        const ajaxHtmlUpdate = function() {
+            const url = `/api/findings?${new URLSearchParams({
+                search: searchInput.value,
+                severity: filterSeverity.value,
+                category: filterCategory.value,
+                observation_type: filterObsType.value,
+                confidence: filterConfidence.value,
+                host: filterHost.value
+            }).toString()}`;
+
+            fetch(url)
+                .then(res => res.json())
+                .then(data => {
+                    const tbody = document.getElementById('findings-tbody');
+                    tbody.innerHTML = '';
+                    document.getElementById('findings-table-count').innerText = `${data.length} Findings`;
+
+                    if (data.length === 0) {
+                        tbody.innerHTML = `
+                            <tr>
+                                <td colspan="9" class="text-center text-muted py-5">
+                                    <i class="fa-solid fa-shield-halved fa-2x mb-3 text-muted"></i>
+                                    <p class="mb-0">No matching findings found.</p>
+                                </td>
+                            </tr>
+                        `;
+                        return;
+                    }
+
+                    data.forEach(f => {
+                        const tr = document.createElement('tr');
+                        tr.style.cursor = 'pointer';
+                        tr.onclick = () => showFindingDetails(f);
+                        
+                        let badgeHtml = '';
+                        if (f.severity.toUpperCase() === 'HIGH') badgeHtml = '<span class="badge-severity-high">HIGH</span>';
+                        else if (f.severity.toUpperCase() === 'MEDIUM') badgeHtml = '<span class="badge-severity-medium">MEDIUM</span>';
+                        else if (f.severity.toUpperCase() === 'LOW') badgeHtml = '<span class="badge-severity-low">LOW</span>';
+                        else badgeHtml = '<span class="badge-severity-info">INFO</span>';
+
+                        let obsBadge = f.observation_type === 'OBSERVED' ? 'bg-primary-soft text-primary' : 'bg-secondary-soft text-secondary';
+                        let confBadge = f.confidence === 'HIGH' ? 'bg-success-soft text-success' : 'bg-warning-soft text-warning';
+                        let statusBadge = f.status === 'RESOLVED' ? 'bg-success text-white' : (f.status === 'ACKNOWLEDGED' ? 'bg-info text-white' : 'bg-secondary text-white');
+
+                        tr.innerHTML = `
+                            <td>${badgeHtml}</td>
+                            <td class="fw-semibold text-dark">${f.title}</td>
+                            <td class="font-monospace text-secondary fs-8">${f.host_ip}</td>
+                            <td class="font-monospace text-dark fs-8">${f.port_info} (${f.service})</td>
+                            <td><span class="badge bg-light text-secondary fs-9">${f.category}</span></td>
+                            <td><span class="badge ${confBadge} fs-9">${f.confidence}</span></td>
+                            <td><span class="badge ${obsBadge} fs-9">${f.observation_type}</span></td>
+                            <td><span class="badge ${statusBadge} fs-9">${f.status}</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary py-0 px-2 fs-9">
+                                    <i class="fa-solid fa-magnifying-glass"></i> Inspect
+                                </button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                })
+                .catch(err => console.error("Error fetching findings:", err));
+        };
+
+        [searchInput, filterSeverity, filterCategory, filterObsType, filterConfidence, filterHost].forEach(elem => {
+            elem.addEventListener('input', ajaxHtmlUpdate);
+            elem.addEventListener('change', ajaxHtmlUpdate);
+        });
+
+        // Status update handler
+        statusSelect.addEventListener('change', function() {
+            const val = this.value;
+            if (!activeFindingId) return;
+
+            fetch(`/api/findings/${activeFindingId}/status`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ status: val })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // Update current modal state
+                    const modalBadge = document.getElementById('modal-status-badge');
+                    modalBadge.innerText = data.status;
+                    modalBadge.className = `badge ${data.status === 'RESOLVED' ? 'bg-success' : (data.status === 'ACKNOWLEDGED' ? 'bg-info' : 'bg-secondary')} text-white`;
+                    // Refresh findings list
+                    ajaxHtmlUpdate();
+                } else {
+                    alert(data.error || 'Failed to update status.');
+                }
+            })
+            .catch(err => console.error("Error updating status:", err));
+        });
+    });
+
+    function showFindingDetails(finding) {
+        activeFindingId = finding.id;
+
+        document.getElementById('modal-finding-title').innerText = finding.title;
+        document.getElementById('modal-finding-rule').innerText = finding.rule_id;
+        document.getElementById('modal-finding-category').innerText = finding.category;
+        document.getElementById('modal-finding-host').innerText = finding.host_ip;
+        document.getElementById('modal-finding-port').innerText = `${finding.port_info} (${finding.service})`;
+        document.getElementById('modal-finding-desc').innerText = finding.description;
+        document.getElementById('modal-finding-evidence').innerText = finding.evidence;
+        document.getElementById('modal-finding-remediation').innerText = finding.remediation || finding.recommendation;
+
+        const sevContainer = document.getElementById('modal-finding-severity');
+        if (finding.severity.toUpperCase() === 'HIGH') sevContainer.innerHTML = '<span class="badge-severity-high">HIGH</span>';
+        else if (finding.severity.toUpperCase() === 'MEDIUM') sevContainer.innerHTML = '<span class="badge-severity-medium">MEDIUM</span>';
+        else if (finding.severity.toUpperCase() === 'LOW') sevContainer.innerHTML = '<span class="badge-severity-low">LOW</span>';
+        else sevContainer.innerHTML = '<span class="badge-severity-info">INFO</span>';
+
+        const obsBadge = document.getElementById('modal-finding-obs');
+        obsBadge.innerText = finding.observation_type;
+        obsBadge.className = `badge ${finding.observation_type === 'OBSERVED' ? 'bg-primary-soft text-primary' : 'bg-secondary-soft text-secondary'} fs-9`;
+
+        const confBadge = document.getElementById('modal-finding-conf');
+        confBadge.innerText = `${finding.confidence} CONFIDENCE`;
+        confBadge.className = `badge ${finding.confidence === 'HIGH' ? 'bg-success-soft text-success' : 'bg-warning-soft text-warning'} fs-9`;
+
+        const statusSelect = document.getElementById('modal-status-select');
+        statusSelect.value = finding.status;
+
+        const modalBadge = document.getElementById('modal-status-badge');
+        modalBadge.innerText = finding.status;
+        modalBadge.className = `badge ${finding.status === 'RESOLVED' ? 'bg-success' : (finding.status === 'ACKNOWLEDGED' ? 'bg-info' : 'bg-secondary')} text-white`;
+
+        findingDetailsModalObj.show();
+    }
+</script>
+{% endblock %}

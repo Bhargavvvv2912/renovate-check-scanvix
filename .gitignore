@@ -1,0 +1,11 @@
+instance/
+*.db
+*.sqlite3
+__pycache__/
+*.pyc
+.pytest_cache/
+app.log
+scans/
+reports/
+venv/
+.env

@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}Report Preview — {{ scan.target if scan else 'Security Assessment' }}{% endblock %}
+{% block page_title %}Security Assessment Report{% endblock %}
+{% block page_subtitle %}Generated automated security report preview{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card-saas p-5">
+            <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-4">
+                <div>
+                    <h3 class="fw-bold mb-1" style="color: var(--text-main);"><i class="fa-regular fa-file-lines text-primary me-2"></i> SECURITY ASSESSMENT REPORT</h3>
+                    <p class="text-secondary mb-0 fs-8">
+                        Report ID: <code>{{ report.report_id if report else ('REP-' ~ '%04d' % (scan.id if scan else 1)) }}</code> | 
+                        Target: <code>{{ scan.target if scan else 'N/A' }}</code> | 
+                        Generated: {{ (scan.start_time.strftime('%b %d, %Y') if scan and scan.start_time else 'N/A') }}
+                    </p>
+                </div>
+                {% if scan %}
+                <a href="{{ url_for('reports.download_report', scan_id=scan.id) }}" class="btn btn-primary btn-sm">
+                    <i class="fa-solid fa-download me-2"></i> Download PDF Report
+                </a>
+                {% endif %}
+            </div>
+
+            <!-- Executive Summary -->
+            <section class="mb-4">
+                <h5 class="fw-bold mb-3" style="color: var(--text-main); font-size: 1rem;">1. Executive Summary</h5>
+                <p class="text-secondary fs-8 leading-relaxed">
+                    This security assessment report summarizes the results of a controlled network security scan executed against target system <code>{{ scan.target if scan else 'N/A' }}</code>. The scan was performed under authorized laboratory conditions using the <strong>{{ (scan.scan_profile|replace('_', ' ')|title) if scan else 'N/A' }}</strong> profile.
+                </p>
+                <div class="bg-light p-3 rounded-3 border">
+                    <div class="row text-center text-md-start">
+                        <div class="col-6 col-md-3">
+                            <span class="text-secondary fs-9 d-block">Hosts Scanned</span>
+                            <span class="fw-bold fs-5 text-dark">{{ hosts|length if hosts else (scan.number_of_hosts if scan else 0) }}</span>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <span class="text-secondary fs-9 d-block">Open Ports</span>
+                            <span class="fw-bold fs-5 text-dark">
+                                {% set open_p_count = 0 %}
+                                {% for h in hosts %}
+                                    {% for p in h.ports %}
+                                        {% if p.state == 'open' %}
+                                            {% set open_p_count = open_p_count + 1 %}
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endfor %}
+                                {{ open_p_count if hosts else (scan.number_of_open_ports if scan else 0) }}
+                            </span>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <span class="text-secondary fs-9 d-block">Scan Status</span>
+                            <span class="fw-bold fs-5 text-primary">{{ scan.status|capitalize if scan else 'N/A' }}</span>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <span class="text-secondary fs-9 d-block">Total Findings</span>
+                            <span class="fw-bold fs-5 text-danger">{{ findings|length if findings else (scan.number_of_findings if scan else 0) }}</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Service Enumeration Details -->
+            <section class="mb-4">
+                <h5 class="fw-bold mb-3" style="color: var(--text-main); font-size: 1rem;">2. Service Enumeration Details</h5>
+                <div class="table-responsive">
+                    <table class="table-saas-clean mb-0">
+                        <thead>
+                            <tr>
+                                <th>Host</th>
+                                <th>Port</th>
+                                <th>Protocol</th>
+                                <th>State</th>
+                                <th>Service</th>
+                                <th>Product / Version</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% set has_ports = false %}
+                            {% for h in hosts %}
+                                {% for p in h.ports %}
+                                    {% set has_ports = true %}
+                                    <tr>
+                                        <td class="text-secondary">{{ h.ip_address }}</td>
+                                        <td class="fw-semibold">{{ p.port_number }}</td>
+                                        <td class="text-secondary">{{ p.protocol|upper }}</td>
+                                        <td>
+                                            {% if p.state == 'open' %}
+                                            <span class="badge-status-completed">open</span>
+                                            {% else %}
+                                            <span class="badge bg-secondary-soft text-secondary">{{ p.state }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="fw-semibold">{{ p.service or 'unknown' }}</td>
+                                        <td class="text-secondary">{{ p.product or '' }} {{ p.version or '' }}</td>
+                                    </tr>
+                                {% endfor %}
+                            {% endfor %}
+                            {% if not has_ports %}
+                            <tr>
+                                <td colspan="6" class="text-center py-3 text-muted">No open ports or services detected.</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Security Findings -->
+            <section>
+                <h5 class="fw-bold mb-3" style="color: var(--text-main); font-size: 1rem;">3. Security Findings</h5>
+                {% if findings %}
+                    {% for f in findings %}
+                    <div class="card-saas p-3 mb-3 border-start border-4 border-{{ 'danger' if f.severity|lower == 'high' else ('warning' if f.severity|lower == 'medium' else ('info' if f.severity|lower == 'low' else 'secondary')) }}">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="fw-bold text-dark">{{ f.title }}</span>
+                            <span class="badge-severity-{{ f.severity|lower }}">{{ f.severity }}</span>
+                        </div>
+                        <p class="text-secondary fs-8 mb-1"><strong>Rule:</strong> {{ f.rule_id }} | <strong>Status:</strong> {{ f.status }}</p>
+                        {% if f.description %}
+                        <p class="text-secondary fs-8 mb-1"><strong>Description:</strong> {{ f.description }}</p>
+                        {% endif %}
+                        {% if f.evidence %}
+                        <p class="text-secondary fs-8 mb-1"><strong>Evidence:</strong> <code>{{ f.evidence }}</code></p>
+                        {% endif %}
+                        {% if f.remediation %}
+                        <p class="text-secondary fs-8 mb-0"><strong>Remediation:</strong> {{ f.remediation }}</p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="p-3 text-center text-muted bg-light rounded-3 border">
+                        <i class="fa-solid fa-shield-check fa-2x mb-2 text-success opacity-75"></i>
+                        <p class="mb-0 fs-8">No security findings or vulnerabilities identified in this assessment.</p>
+                    </div>
+                {% endif %}
+            </section>
+        </div>
+    </div>
+</div>
+{% endblock %}

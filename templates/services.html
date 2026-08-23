@@ -1,0 +1,317 @@
+{% extends "base.html" %}
+
+{% block title %}Service Inventory — NMAP Security Suite{% endblock %}
+{% block page_title %}Network Service Inventory{% endblock %}
+{% block page_subtitle %}Observed ports, protocols, version information and services across targets{% endblock %}
+
+{% block content %}
+<!-- KPI Service Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-2 col-sm-4 col-6">
+        <div class="card-saas p-3 text-center border-start border-4 border-primary">
+            <span class="text-secondary fs-8 fw-medium">HTTP Web</span>
+            <h4 class="text-dark mb-0 fw-bold mt-1" id="count-http">{{ counts.HTTP }}</h4>
+        </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-6">
+        <div class="card-saas p-3 text-center border-start border-4 border-info">
+            <span class="text-secondary fs-8 fw-medium">HTTPS Secure</span>
+            <h4 class="text-dark mb-0 fw-bold mt-1" id="count-https">{{ counts.HTTPS }}</h4>
+        </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-6">
+        <div class="card-saas p-3 text-center border-start border-4 border-success">
+            <span class="text-secondary fs-8 fw-medium">SSH Terminal</span>
+            <h4 class="text-dark mb-0 fw-bold mt-1" id="count-ssh">{{ counts.SSH }}</h4>
+        </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-6">
+        <div class="card-saas p-3 text-center border-start border-4 border-warning">
+            <span class="text-secondary fs-8 fw-medium">DNS Services</span>
+            <h4 class="text-dark mb-0 fw-bold mt-1" id="count-dns">{{ counts.DNS }}</h4>
+        </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-6">
+        <div class="card-saas p-3 text-center border-start border-4 border-danger">
+            <span class="text-secondary fs-8 fw-medium">Databases</span>
+            <h4 class="text-dark mb-0 fw-bold mt-1" id="count-db">{{ counts.MySQL + counts.PostgreSQL }}</h4>
+        </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-6">
+        <div class="card-saas p-3 text-center border-start border-4 border-secondary">
+            <span class="text-secondary fs-8 fw-medium">Others</span>
+            <h4 class="text-dark mb-0 fw-bold mt-1" id="count-other">{{ counts.FTP + counts.SMTP + counts.RDP + counts.SMB + counts.Other }}</h4>
+        </div>
+    </div>
+</div>
+
+<!-- Filters and Search Control Panel -->
+<div class="card-saas p-4 mb-4">
+    <h5 class="fw-bold mb-3 text-dark fs-7">
+        <i class="fa-solid fa-filter text-primary me-2"></i> Filter & Search Services
+    </h5>
+    <form id="servicesFilterForm" class="row g-3">
+        <div class="col-md-4">
+            <label for="searchQuery" class="form-label">Search</label>
+            <div class="input-group input-group-sm">
+                <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
+                <input type="text" class="form-control border-start-0" id="searchQuery" placeholder="Search service, IP, host, product...">
+            </div>
+        </div>
+        <div class="col-md-2">
+            <label for="filterService" class="form-label">Service</label>
+            <select class="form-select form-select-sm" id="filterService">
+                <option value="">All Services</option>
+                <option value="http">HTTP</option>
+                <option value="https">HTTPS</option>
+                <option value="ssh">SSH</option>
+                <option value="dns">DNS</option>
+                <option value="mysql">MySQL</option>
+                <option value="postgresql">PostgreSQL</option>
+                <option value="ftp">FTP</option>
+                <option value="smtp">SMTP</option>
+                <option value="rdp">RDP</option>
+                <option value="smb">SMB</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label for="filterProtocol" class="form-label">Protocol</label>
+            <select class="form-select form-select-sm" id="filterProtocol">
+                <option value="">All Protocols</option>
+                <option value="tcp">TCP</option>
+                <option value="udp">UDP</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label for="filterState" class="form-label">Port State</label>
+            <select class="form-select form-select-sm" id="filterState">
+                <option value="open">Open</option>
+                <option value="closed">Closed</option>
+                <option value="filtered">Filtered</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label for="filterHost" class="form-label">Host IP</label>
+            <input type="text" class="form-control form-control-sm" id="filterHost" placeholder="e.g. 127.0.0.1">
+        </div>
+    </form>
+</div>
+
+<!-- Services Inventory Table -->
+<div class="card-saas p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0 text-dark fs-7">
+            <i class="fa-solid fa-list-check text-primary me-2"></i> Discovered Service Inventory
+        </h5>
+        <span class="badge bg-light text-dark font-monospace" id="table-row-count">{{ services|length }} Services</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table-saas-clean mb-0" id="services-table">
+            <thead>
+                <tr>
+                    <th>Service</th>
+                    <th>Port</th>
+                    <th>Protocol</th>
+                    <th>State</th>
+                    <th>Product</th>
+                    <th>Version</th>
+                    <th>Host Target</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="services-tbody">
+                {% for s in services %}
+                <tr class="service-row-item" style="cursor: pointer;" onclick="showServiceDetails({{ s | tojson | forceescape }})">
+                    <td><span class="badge bg-primary-soft text-primary font-monospace fw-bold">{{ s.service.upper() }}</span></td>
+                    <td class="fw-bold text-dark font-monospace">{{ s.port }}</td>
+                    <td class="text-uppercase text-secondary fw-semibold fs-8">{{ s.protocol }}</td>
+                    <td>
+                        <span class="badge bg-success-soft text-success">{{ s.state }}</span>
+                    </td>
+                    <td class="text-dark fs-8">{{ s.product }}</td>
+                    <td class="text-secondary font-monospace fs-8">{{ s.version }}</td>
+                    <td class="text-primary font-monospace fs-8">{{ s.host_ip }}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary py-0 px-2 fs-9">
+                            <i class="fa-solid fa-circle-info"></i> Details
+                        </button>
+                    </td>
+                </tr>
+                {% else %}
+                <tr id="no-services-row">
+                    <td colspan="8" class="text-center text-muted py-5">
+                        <i class="fa-solid fa-network-wired fa-2x mb-3 text-muted"></i>
+                        <p class="mb-0">No open services found. Run a new scan to discover services.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Service Details Modal -->
+<div class="modal fade" id="serviceDetailsModal" tabindex="-1" aria-labelledby="serviceDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title fw-bold text-dark fs-6" id="serviceDetailsModalLabel">
+                    <i class="fa-solid fa-circle-info text-primary me-2"></i> Service Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="text-center mb-3">
+                    <span class="badge bg-primary-soft text-primary font-monospace fw-bold fs-6 px-3 py-2" id="modal-service-badge">HTTP</span>
+                </div>
+                <table class="table table-bordered align-middle fs-8">
+                    <tbody>
+                        <tr>
+                            <td class="fw-semibold text-secondary w-35">Host Address:</td>
+                            <td class="font-monospace text-dark" id="modal-host-ip">127.0.0.1</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-semibold text-secondary">Hostname:</td>
+                            <td class="text-dark" id="modal-hostname">—</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-semibold text-secondary">Port / Protocol:</td>
+                            <td class="font-monospace text-dark" id="modal-port-protocol">80/TCP</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-semibold text-secondary">State:</td>
+                            <td><span class="badge bg-success-soft text-success" id="modal-state">open</span></td>
+                        </tr>
+                        <tr>
+                            <td class="fw-semibold text-secondary">Product:</td>
+                            <td class="text-dark" id="modal-product">Apache httpd</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-semibold text-secondary">Version:</td>
+                            <td class="text-secondary font-monospace" id="modal-version">2.4.41</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-semibold text-secondary">Extra Information:</td>
+                            <td class="text-secondary fs-9" id="modal-extra-info">Ubuntu Linux</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <a href="#" id="modal-scan-results-btn" class="btn btn-primary btn-sm">
+                    <i class="fa-solid fa-table-list me-1"></i> View Scan Results
+                </a>
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let serviceDetailsModalObj = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        serviceDetailsModalObj = new bootstrap.Modal(document.getElementById('serviceDetailsModal'));
+        
+        // Listeners for AJAX filtering
+        const searchInput = document.getElementById('searchQuery');
+        const filterService = document.getElementById('filterService');
+        const filterProtocol = document.getElementById('filterProtocol');
+        const filterState = document.getElementById('filterState');
+        const filterHost = document.getElementById('filterHost');
+
+        const triggerFilter = () => {
+            const queryParams = new URLSearchParams({
+                search: searchInput.value,
+                service: filterService.value,
+                protocol: filterProtocol.value,
+                state: filterState.value,
+                host: filterHost.value
+            });
+
+            fetch(`/api/services?${queryParams.toString()}`)
+                .ajaxHtmlUpdate();
+        };
+
+        const ajaxHtmlUpdate = function() {
+            const url = `/api/services?${new URLSearchParams({
+                search: searchInput.value,
+                service: filterService.value,
+                protocol: filterProtocol.value,
+                state: filterState.value,
+                host: filterHost.value
+            }).toString()}`;
+
+            fetch(url)
+                .then(res => res.json())
+                .then(data => {
+                    const tbody = document.getElementById('services-tbody');
+                    tbody.innerHTML = '';
+                    document.getElementById('table-row-count').innerText = `${data.length} Services`;
+
+                    if (data.length === 0) {
+                        tbody.innerHTML = `
+                            <tr>
+                                <td colspan="8" class="text-center text-muted py-5">
+                                    <i class="fa-solid fa-network-wired fa-2x mb-3 text-muted"></i>
+                                    <p class="mb-0">No matching services found.</p>
+                                </td>
+                            </tr>
+                        `;
+                        return;
+                    }
+
+                    data.forEach(s => {
+                        const tr = document.createElement('tr');
+                        tr.className = 'service-row-item';
+                        tr.style.cursor = 'pointer';
+                        tr.onclick = () => showServiceDetails(s);
+                        tr.innerHTML = `
+                            <td><span class="badge bg-primary-soft text-primary font-monospace fw-bold">${s.service.toUpperCase()}</span></td>
+                            <td class="fw-bold text-dark font-monospace">${s.port}</td>
+                            <td class="text-uppercase text-secondary fw-semibold fs-8">${s.protocol}</td>
+                            <td><span class="badge bg-success-soft text-success">${s.state}</span></td>
+                            <td class="text-dark fs-8">${s.product}</td>
+                            <td class="text-secondary font-monospace fs-8">${s.version}</td>
+                            <td class="text-primary font-monospace fs-8">${s.host_ip}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary py-0 px-2 fs-9">
+                                    <i class="fa-solid fa-circle-info"></i> Details
+                                </button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                })
+                .catch(err => console.error("Error fetching services:", err));
+        };
+
+        [searchInput, filterService, filterProtocol, filterState, filterHost].forEach(elem => {
+            elem.addEventListener('input', ajaxHtmlUpdate);
+            elem.addEventListener('change', ajaxHtmlUpdate);
+        });
+    });
+
+    function showServiceDetails(service) {
+        document.getElementById('modal-service-badge').innerText = service.service.toUpperCase();
+        document.getElementById('modal-host-ip').innerText = service.host_ip;
+        document.getElementById('modal-hostname').innerText = service.hostname || '—';
+        document.getElementById('modal-port-protocol').innerText = `${service.port}/${service.protocol.toUpperCase()}`;
+        
+        const stateBadge = document.getElementById('modal-state');
+        stateBadge.innerText = service.state;
+        stateBadge.className = service.state === 'open' ? 'badge bg-success-soft text-success' : 'badge bg-warning-soft text-warning';
+
+        document.getElementById('modal-product').innerText = service.product || '—';
+        document.getElementById('modal-version').innerText = service.version || 'Not detected';
+        document.getElementById('modal-extra-info').innerText = service.extra_info || '—';
+        
+        document.getElementById('modal-scan-results-btn').href = `/scan/results/${service.scan_id}`;
+
+        serviceDetailsModalObj.show();
+    }
+</script>
+{% endblock %}
