@@ -14,7 +14,7 @@ def test_full_dashboard_flow(client, auth_user):
     assert res_login.status_code == 200
 
     # 3. Access Dashboard
-    res_dash = client.get('/')
+    res_dash = client.get('/dashboard')
     assert res_dash.status_code == 200
     html = res_dash.data.decode('utf-8')
     assert 'NMAP' in html

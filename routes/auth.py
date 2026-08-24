@@ -19,7 +19,7 @@ def is_safe_url(target):
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('dashboard.index'))
+        return redirect(url_for('dashboard.dashboard_alias'))
 
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
@@ -40,7 +40,7 @@ def login():
             next_page = request.args.get('next')
             if next_page and is_safe_url(next_page):
                 return redirect(next_page)
-            return redirect(url_for('dashboard.index'))
+            return redirect(url_for('dashboard.dashboard_alias'))
         else:
             # Generic error message to prevent account enumeration
             logger.warning(f"Failed login attempt for username '{username}'")

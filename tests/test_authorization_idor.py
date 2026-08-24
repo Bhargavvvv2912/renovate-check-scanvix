@@ -12,7 +12,7 @@ from models import db, Scan, Finding, Report
 def test_unauthenticated_requests_redirected(client, sample_completed_scan):
     """SEC-001: Unauthenticated requests to protected scan/report routes must be blocked."""
     protected_urls = [
-        '/',
+        '/dashboard',
         '/scan/new',
         f'/scan/progress/{sample_completed_scan}',
         f'/scan/results/{sample_completed_scan}',

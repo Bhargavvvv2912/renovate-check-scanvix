@@ -8,7 +8,7 @@ def test_dashboard_authenticated(client, auth_user):
         'password': 'SecretPassword123!'
     })
 
-    response = client.get('/')
+    response = client.get('/dashboard')
     assert response.status_code == 200
     assert b'Total Scans' in response.data
     assert b'Hosts Scanned' in response.data
@@ -50,7 +50,7 @@ def test_dashboard_api_stats(client, auth_user):
 
 def test_dashboard_unauthenticated_redirect(client):
     """Verify unauthenticated user cannot access dashboard or API."""
-    res_dash = client.get('/')
+    res_dash = client.get('/dashboard')
     assert res_dash.status_code == 302
     assert '/login' in res_dash.location
 

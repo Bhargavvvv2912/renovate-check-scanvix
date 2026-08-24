@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScanVix — Nmap-Based Network Scanning & Security Assessment Platform</title>
+    <meta name="description" content="ScanVix is an enterprise-grade network security assessment platform powered by Nmap. Discover hosts, identify open ports, enumerate services, analyze NSE results, and generate actionable PDF security reports.">
+
+    <!-- Google Fonts (Inter) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
+    <!-- Landing Page CSS (Scoped) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
+</head>
+<body>
+<div class="scanvix-landing">
+
+    <!-- ========== NAVBAR ========== -->
+    <nav class="scanvix-nav" id="scanvixNav">
+        <a href="/" class="scanvix-nav-brand">
+            <div class="scanvix-nav-brand-icon">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <div class="scanvix-nav-brand-text">
+                <span class="scanvix-nav-brand-name">ScanVix</span>
+                <span class="scanvix-nav-brand-sub">SECURITY SUITE</span>
+            </div>
+        </a>
+
+        <div class="scanvix-nav-links">
+            <a href="#overview" class="scanvix-nav-link active">Overview</a>
+            <a href="#nmap" class="scanvix-nav-link">Nmap</a>
+            <a href="#ports" class="scanvix-nav-link">Ports</a>
+            <a href="#services" class="scanvix-nav-link">Services</a>
+            <a href="#nse" class="scanvix-nav-link">NSE</a>
+            <a href="#workflow" class="scanvix-nav-link">Workflow</a>
+            <a href="#findings" class="scanvix-nav-link">Findings</a>
+        </div>
+
+        <div>
+            {% if is_authenticated %}
+            <a href="{{ url_for('dashboard.dashboard_alias') }}" class="scanvix-nav-cta">
+                <i class="fa-solid fa-rocket"></i> Launch ScanVix
+            </a>
+            {% else %}
+            <a href="{{ url_for('auth.login') }}" class="scanvix-nav-cta">
+                <i class="fa-solid fa-rocket"></i> Launch ScanVix
+            </a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <!-- ========== HERO SECTION ========== -->
+    <section class="scanvix-hero-section" id="overview">
+        <div class="scanvix-hero-container">
+            
+            <!-- Hero Left: Typography & Actions -->
+            <div class="scanvix-hero-left">
+                <div class="scanvix-hero-badge">
+                    <i class="fa-solid fa-bolt"></i> NETWORK VISIBILITY. SECURITY CLARITY.
+                </div>
+
+                <h1 class="scanvix-hero-title">
+                    See Your Network.<br>
+                    <span class="scanvix-text-gradient">Understand Your Security.</span>
+                </h1>
+
+                <p class="scanvix-hero-desc">
+                    ScanVix turns Nmap scans into actionable security intelligence.
+                    Discover hosts, identify open ports, enumerate services,
+                    analyze NSE results and generate professional reports.
+                </p>
+
+                <div class="scanvix-hero-actions">
+                    {% if is_authenticated %}
+                    <a href="{{ url_for('dashboard.dashboard_alias') }}" class="scanvix-btn-primary">
+                        <i class="fa-solid fa-rocket"></i> Launch ScanVix
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="scanvix-btn-primary">
+                        <i class="fa-solid fa-rocket"></i> Launch ScanVix
+                    </a>
+                    {% endif %}
+                    <a href="#workflow" class="scanvix-btn-glass">
+                        <i class="fa-solid fa-arrow-down"></i> Explore How It Works
+                    </a>
+                </div>
+
+                <!-- 4 Hero Feature Badges (Matching Reference Image) -->
+                <div class="scanvix-hero-badges-row">
+                    <div class="scanvix-badge-card">
+                        <div class="scanvix-badge-icon">
+                            <i class="fa-solid fa-shield"></i>
+                        </div>
+                        <div class="scanvix-badge-text">
+                            <span class="scanvix-badge-title">Nmap Powered</span>
+                            <span class="scanvix-badge-sub">Industry Standard</span>
+                        </div>
+                    </div>
+
+                    <div class="scanvix-badge-card">
+                        <div class="scanvix-badge-icon">
+                            <i class="fa-solid fa-crosshairs"></i>
+                        </div>
+                        <div class="scanvix-badge-text">
+                            <span class="scanvix-badge-title">Deep Enumeration</span>
+                            <span class="scanvix-badge-sub">Ports • Services • NSE</span>
+                        </div>
+                    </div>
+
+                    <div class="scanvix-badge-card">
+                        <div class="scanvix-badge-icon">
+                            <i class="fa-solid fa-file-lines"></i>
+                        </div>
+                        <div class="scanvix-badge-text">
+                            <span class="scanvix-badge-title">Actionable Reports</span>
+                            <span class="scanvix-badge-sub">PDF Security Reports</span>
+                        </div>
+                    </div>
+
+                    <div class="scanvix-badge-card">
+                        <div class="scanvix-badge-icon">
+                            <i class="fa-solid fa-lock"></i>
+                        </div>
+                        <div class="scanvix-badge-text">
+                            <span class="scanvix-badge-title">Safe & Authorized</span>
+                            <span class="scanvix-badge-sub">Built-in Safety Boundary</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hero Right: Interactive 3D Cyber Stage with Radar Platform & Floating Windows -->
+            <div class="scanvix-hero-stage">
+                <!-- WebGL 3D Canvas -->
+                <div class="scanvix-3d-canvas-wrap">
+                    <canvas id="scanvix3DCanvas"></canvas>
+                </div>
+
+                <!-- Floating Interactive 3D Command Windows -->
+                <div class="scanvix-cmd-win-layer">
+                    
+                    <!-- Window 1: nmap -sS (Top Center) -->
+                    <div class="scanvix-cmd-win win-syn" data-cmd="syn" tabindex="0">
+                        <div class="scanvix-win-header">
+                            <span class="scanvix-win-title">nmap -sS</span>
+                            <span class="scanvix-win-close">&times;</span>
+                        </div>
+                        <div class="scanvix-win-desc">
+                            <strong>TCP SYN Scan</strong>
+                            Stealthy & fast • Half-open scanning
+                        </div>
+                        <div class="scanvix-win-code">
+                            <span class="prompt">scanvix@lab:~$</span> <span class="flag">nmap -sS</span> <span class="target">192.168.1.10</span>
+                        </div>
+                    </div>
+
+                    <!-- Window 2: nmap 192.168.1.10 (Large Terminal Window Center-Left) -->
+                    <div class="scanvix-cmd-win win-terminal" data-cmd="terminal" tabindex="0">
+                        <div class="scanvix-win-header">
+                            <span class="scanvix-win-title">nmap 192.168.1.10</span>
+                            <span class="scanvix-win-close">&times;</span>
+                        </div>
+                        <div style="font-size: 0.72rem; color: var(--lp-text-muted); font-family: monospace;">
+                            Starting Nmap 7.94...<br>
+                            Host is up (0.0012s latency).<br>
+                            Not shown: 996 closed tcp ports (conn-refused)
+                        </div>
+                        <table class="scanvix-terminal-table">
+                            <thead>
+                                <tr>
+                                    <th>PORT</th>
+                                    <th>STATE</th>
+                                    <th>SERVICE</th>
+                                    <th>VERSION</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><span class="port-link" data-port="22">22/tcp</span></td>
+                                    <td><span class="port-open">open</span></td>
+                                    <td>ssh</td>
+                                    <td>OpenSSH 8.9</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="port-link" data-port="80">80/tcp</span></td>
+                                    <td><span class="port-open">open</span></td>
+                                    <td>http</td>
+                                    <td>Apache httpd 2.4.54</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="port-link" data-port="443">443/tcp</span></td>
+                                    <td><span class="port-open">open</span></td>
+                                    <td>https</td>
+                                    <td>nginx 1.22.1</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="port-link" data-port="3306">3306/tcp</span></td>
+                                    <td><span class="port-open">open</span></td>
+                                    <td>mysql</td>
+                                    <td>MySQL 8.0.33</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div style="font-size: 0.7rem; color: var(--lp-text-muted); font-family: monospace;">
+                            Nmap done: 1 IP address (1 host up) scanned in 2.34s
+                        </div>
+                    </div>
+
+                    <!-- Window 3: nmap -Pn (Top Right) -->
+                    <div class="scanvix-cmd-win win-pn" data-cmd="pn" tabindex="0">
+                        <div class="scanvix-win-header">
+                            <span class="scanvix-win-title">nmap -Pn</span>
+                            <span class="scanvix-win-close">&times;</span>
+                        </div>
+                        <div class="scanvix-win-desc">
+                            <strong>Treat all hosts as online</strong>
+                            Skip host discovery • Useful in trusted networks
+                        </div>
+                        <div class="scanvix-win-code">
+                            <span class="prompt">scanvix@lab:~$</span> <span class="flag">nmap -Pn</span> <span class="target">192.168.1.10</span>
+                        </div>
+                    </div>
+
+                    <!-- Window 4: nmap -A (Bottom Right) -->
+                    <div class="scanvix-cmd-win win-aggressive" data-cmd="aggressive" tabindex="0">
+                        <div class="scanvix-win-header">
+                            <span class="scanvix-win-title">nmap -A</span>
+                            <span class="scanvix-win-close">&times;</span>
+                        </div>
+                        <div class="scanvix-win-desc">
+                            <strong>Aggressive Scan</strong>
+                            OS detection, version detection, script scanning, traceroute
+                        </div>
+                        <div class="scanvix-win-code">
+                            <span class="prompt">scanvix@lab:~$</span> <span class="flag">nmap -A</span> <span class="target">192.168.1.10</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Stage Controls Hint -->
+                <div class="scanvix-stage-hint">
+                    <i class="fa-solid fa-hand-pointer"></i> Drag to rotate &bull; Scroll to zoom &bull; Click a window to focus
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ========== SECTION: WHAT IS NMAP? ========== -->
+    <section class="scanvix-section" id="nmap">
+        <div class="scanvix-container">
+            <div class="scanvix-nmap-card">
+                <div class="scanvix-nmap-info">
+                    <div class="scanvix-section-tag">
+                        <i class="fa-solid fa-terminal"></i> Foundation
+                    </div>
+                    <h2 class="scanvix-section-title">WHAT IS NMAP?</h2>
+                    <p class="scanvix-section-desc" style="margin-bottom: 24px;">
+                        Nmap (Network Mapper) is an open-source tool used for network exploration and security auditing.
+                        It helps you discover hosts, identify open ports, detect services, and gather valuable information
+                        about your network attack surface.
+                    </p>
+                    <div>
+                        <a href="#ports" class="scanvix-btn-glass">
+                            Learn More About Ports & Services <i class="fa-solid fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 3D Holographic Shield Pedestal Visual -->
+                <div class="scanvix-nmap-visual">
+                    <div class="scanvix-shield-pedestal">
+                        <div class="pedestal-base"></div>
+                        <div class="pedestal-ring-1"></div>
+                        <div class="pedestal-ring-2"></div>
+                        <i class="fa-solid fa-shield-halved shield-holo-icon"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== SECTION: SCANVIX 9-STEP WORKFLOW ========== -->
+    <section class="scanvix-section scanvix-section-alt" id="workflow">
+        <div class="scanvix-container">
+            <div class="scanvix-section-header">
+                <div class="scanvix-section-tag">
+                    <i class="fa-solid fa-diagram-project"></i> Pipeline
+                </div>
+                <h2 class="scanvix-section-title">SCANVIX WORKFLOW</h2>
+                <p class="scanvix-section-desc">
+                    A secure 9-phase assessment pipeline engineered for reliable discovery, rigorous verification, and automated vulnerability triage.
+                </p>
+            </div>
+
+            <!-- 9-Step Horizontal Interactive Pipeline -->
+            <div class="scanvix-workflow-wrap">
+                <div class="scanvix-workflow-track">
+                    <div class="scanvix-workflow-laser">
+                        <div class="scanvix-laser-packet"></div>
+                    </div>
+
+                    <!-- Step 1 -->
+                    <div class="scanvix-step-card" data-step="1">
+                        <div class="scanvix-step-icon-wrap">
+                            <i class="fa-solid fa-crosshairs"></i>
+                        </div>
+                        <span class="scanvix-step-num">Step 01</span>
+                        <span class="scanvix-step-name">Target</span>
+                        <span class="scanvix-step-desc">Authorized target input</span>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="scanvix-step-card" data-step="2">
+                        <div class="scanvix-step-icon-wrap">
+                            <i class="fa-solid fa-shield-check"></i>
+                        </div>
+                        <span class="scanvix-step-num">Step 02</span>
+                        <span class="scanvix-step-name">Validation</span>
+                        <span class="scanvix-step-desc">Safety boundary verification</span>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="scanvix-step-card" data-step="3">
+                        <div class="scanvix-step-icon-wrap">
+                            <i class="fa-solid fa-terminal"></i>
+                        </div>
+                        <span class="scanvix-step-num">Step 03</span>
+                        <span class="scanvix-step-name">Nmap Scan</span>
+                        <span class="scanvix-step-desc">Predefined scan profiles</span>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="scanvix-step-card" data-step="4">
+                        <div class="scanvix-step-icon-wrap">
+                            <i class="fa-solid fa-code"></i>
+                        </div>
+                        <span class="scanvix-step-num">Step 04</span>
+                        <span class="scanvix-step-name">XML Output</span>
+                        <span class="scanvix-step-desc">Structured scan results</span>
+                    </div>
+
+                    <!-- Step 5 -->
+                    <div class="scanvix-step-card" data-step="5">
+                        <div class="scanvix-step-icon-wrap">
+                            <i class="fa-solid fa-cube"></i>
+                        </div>
+                        <span class="scanvix-step-num">Step 05</span>
+                        <span class="scanvix-step-name">Parser</span>
+                        <span class="scanvix-step-desc">Convert XML to data</span>
+                    </div>
+
+                    <!-- Step 6 -->
+                    <div class="scanvix-step-card" data-step="6">
+                        <div class="scanvix-step-icon-wrap">
+                            <i class="fa-solid fa-server"></i>
+                        </div>
+                        <span class="scanvix-step-num">Step 06</span>
+                        <span class="scanvix-step-name">Services</span>
+                        <span class="scanvix-step-desc">Enumerate ports & services</span>
+                    </div>
+
+                    <!-- Step 7 -->
+                    <div class="scanvix-step-card" data-step="7">
+                        <div class="scanvix-step-icon-wrap">
+                            <i class="fa-solid fa-code-compare"></i>
+                        </div>
+                        <span class="scanvix-step-num">Step 07</span>
+                        <span class="scanvix-step-name">NSE Scripts</span>
+                        <span class="scanvix-step-desc">Run approved NSE scripts</span>
+                    </div>
+
+                    <!-- Step 8 -->
+                    <div class="scanvix-step-card" data-step="8">
+                        <div class="scanvix-step-icon-wrap">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                        <span class="scanvix-step-num">Step 08</span>
+                        <span class="scanvix-step-name">Findings</span>
+                        <span class="scanvix-step-desc">Rule-based analysis</span>
+                    </div>
+
+                    <!-- Step 9 -->
+                    <div class="scanvix-step-card" data-step="9">
+                        <div class="scanvix-step-icon-wrap">
+                            <i class="fa-solid fa-file-pdf"></i>
+                        </div>
+                        <span class="scanvix-step-num">Step 09</span>
+                        <span class="scanvix-step-name">Reports</span>
+                        <span class="scanvix-step-desc">PDF security report</span>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== SECTION: UNDERSTAND THE PORT & PORT STATES ========== -->
+    <section class="scanvix-section" id="ports">
+        <div class="scanvix-container">
+            <div class="scanvix-section-header">
+                <div class="scanvix-section-tag">
+                    <i class="fa-solid fa-ethernet"></i> Endpoints
+                </div>
+                <h2 class="scanvix-section-title">UNDERSTAND THE PORT</h2>
+                <p class="scanvix-section-desc">
+                    A network port is a logical endpoint for communication. Click any port below to understand its default service association and security considerations.
+                </p>
+            </div>
+
+            <!-- Interactive Port Tiles -->
+            <div class="scanvix-ports-grid">
+                <div class="scanvix-port-tile" data-port="22" role="button">
+                    <div class="scanvix-port-num">22</div>
+                    <div class="scanvix-port-svc">SSH</div>
+                    <div class="scanvix-port-proto">TCP</div>
+                </div>
+
+                <div class="scanvix-port-tile" data-port="53" role="button">
+                    <div class="scanvix-port-num">53</div>
+                    <div class="scanvix-port-svc">DNS</div>
+                    <div class="scanvix-port-proto">TCP / UDP</div>
+                </div>
+
+                <div class="scanvix-port-tile" data-port="80" role="button">
+                    <div class="scanvix-port-num">80</div>
+                    <div class="scanvix-port-svc">HTTP</div>
+                    <div class="scanvix-port-proto">TCP</div>
+                </div>
+
+                <div class="scanvix-port-tile" data-port="443" role="button">
+                    <div class="scanvix-port-num">443</div>
+                    <div class="scanvix-port-svc">HTTPS</div>
+                    <div class="scanvix-port-proto">TCP</div>
+                </div>
+
+                <div class="scanvix-port-tile" data-port="3306" role="button">
+                    <div class="scanvix-port-num">3306</div>
+                    <div class="scanvix-port-svc">MySQL</div>
+                    <div class="scanvix-port-proto">TCP</div>
+                </div>
+
+                <div class="scanvix-port-tile" data-port="5432" role="button">
+                    <div class="scanvix-port-num">5432</div>
+                    <div class="scanvix-port-svc">PostgreSQL</div>
+                    <div class="scanvix-port-proto">TCP</div>
+                </div>
+
+                <div class="scanvix-port-tile" data-port="3389" role="button">
+                    <div class="scanvix-port-num">3389</div>
+                    <div class="scanvix-port-svc">RDP</div>
+                    <div class="scanvix-port-proto">TCP</div>
+                </div>
+            </div>
+
+            <!-- Port States Breakdown -->
+            <div class="scanvix-port-states-row">
+                <div class="scanvix-state-card state-open">
+                    <div class="scanvix-state-badge">
+                        <i class="fa-solid fa-circle-check"></i> OPEN
+                    </div>
+                    <h3 class="scanvix-state-title">Accepting Connections</h3>
+                    <p class="scanvix-state-desc">
+                        An application is actively listening for TCP connections or UDP packets. Open ports represent the primary attack surface to examine for service enumeration and vulnerability detection.
+                    </p>
+                </div>
+
+                <div class="scanvix-state-card state-filtered">
+                    <div class="scanvix-state-badge">
+                        <i class="fa-solid fa-shield-halved"></i> FILTERED
+                    </div>
+                    <h3 class="scanvix-state-title">Firewall Blocked</h3>
+                    <p class="scanvix-state-desc">
+                        A packet filter, firewall rule, or network security appliance is dropping probes before they reach the port. Nmap cannot determine whether the port is open or closed due to packet loss.
+                    </p>
+                </div>
+
+                <div class="scanvix-state-card state-closed">
+                    <div class="scanvix-state-badge">
+                        <i class="fa-solid fa-circle-xmark"></i> CLOSED
+                    </div>
+                    <h3 class="scanvix-state-title">Host Responsive</h3>
+                    <p class="scanvix-state-desc">
+                        The port is accessible and receives probes, but no application is listening. The host responds with an immediate TCP RST packet, confirming the host is online and reachable.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== SECTION: SERVICE DETECTION ========== -->
+    <section class="scanvix-section scanvix-section-alt" id="services">
+        <div class="scanvix-container">
+            <div class="scanvix-section-header">
+                <div class="scanvix-section-tag">
+                    <i class="fa-solid fa-network-wired"></i> Intelligence
+                </div>
+                <h2 class="scanvix-section-title">PORTS TELL YOU WHERE.<br>SERVICES TELL YOU WHAT.</h2>
+                <p class="scanvix-section-desc">
+                    Identifying open ports is only step one. ScanVix interrogates listening daemons to determine exact software products and release versions.
+                </p>
+            </div>
+
+            <div class="scanvix-pipeline-grid">
+                <div class="scanvix-pipeline-steps">
+                    <div class="scanvix-pipe-row">
+                        <div class="scanvix-pipe-badge">01</div>
+                        <div class="scanvix-pipe-text">
+                            <h4>Port Probe Dispatch</h4>
+                            <p>Sends targeted protocol probes to open ports</p>
+                        </div>
+                    </div>
+                    <div class="scanvix-pipe-row">
+                        <div class="scanvix-pipe-badge">02</div>
+                        <div class="scanvix-pipe-text">
+                            <h4>Banner & Response Analysis</h4>
+                            <p>Parses daemon responses against Nmap signature database</p>
+                        </div>
+                    </div>
+                    <div class="scanvix-pipe-row">
+                        <div class="scanvix-pipe-badge">03</div>
+                        <div class="scanvix-pipe-text">
+                            <h4>Service & Product Fingerprinting</h4>
+                            <p>Identifies exact product (Apache, OpenSSH, nginx, MySQL)</p>
+                        </div>
+                    </div>
+                    <div class="scanvix-pipe-row">
+                        <div class="scanvix-pipe-badge">04</div>
+                        <div class="scanvix-pipe-text">
+                            <h4>Version & OS Detection</h4>
+                            <p>Extracts granular version details to check for known CVEs</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="scanvix-pipe-terminal">
+                    <div style="color: var(--lp-cyan); font-weight: 700; margin-bottom: 8px;">
+                        <span class="prompt">$</span> nmap -sV -p 80,22,443 192.168.1.10
+                    </div>
+                    <div style="color: var(--lp-text-muted);">
+                        Starting Nmap 7.94 service detection...
+                    </div>
+                    <br>
+                    <div style="color: #ffffff;">PORT     STATE SERVICE VERSION</div>
+                    <div style="color: var(--lp-emerald);">22/tcp   open  ssh     OpenSSH 8.9p1 Ubuntu 3ubuntu0.6</div>
+                    <div style="color: var(--lp-emerald);">80/tcp   open  http    Apache httpd 2.4.54 ((Debian))</div>
+                    <div style="color: var(--lp-emerald);">443/tcp  open  ssl/http nginx 1.22.1</div>
+                    <br>
+                    <div style="color: var(--lp-text-muted);">
+                        Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== SECTION: NSE SCRIPTING ENGINE ========== -->
+    <section class="scanvix-section" id="nse">
+        <div class="scanvix-container">
+            <div class="scanvix-section-header">
+                <div class="scanvix-section-tag">
+                    <i class="fa-solid fa-code"></i> Extensibility
+                </div>
+                <h2 class="scanvix-section-title">GO BEYOND PORT SCANNING</h2>
+                <p class="scanvix-section-desc">
+                    The Nmap Scripting Engine (NSE) unlocks deep vulnerability inspection, SSL certificate parsing, cryptographic algorithm audits, and web discovery.
+                </p>
+            </div>
+
+            <div class="scanvix-nse-grid">
+                <div class="scanvix-nse-card">
+                    <div class="scanvix-nse-tag">--script=http-title</div>
+                    <h4 class="scanvix-nse-title">Web Discovery</h4>
+                    <p class="scanvix-nse-desc">Fetches and indexes HTML page titles from HTTP/HTTPS endpoints for rapid asset identification.</p>
+                </div>
+
+                <div class="scanvix-nse-card">
+                    <div class="scanvix-nse-tag">--script=ssl-cert</div>
+                    <h4 class="scanvix-nse-title">SSL/TLS Auditing</h4>
+                    <p class="scanvix-nse-desc">Extracts subject names, issuer authorities, expiration timestamps, and SAN extensions.</p>
+                </div>
+
+                <div class="scanvix-nse-card">
+                    <div class="scanvix-nse-tag">--script=ssh2-enum-algos</div>
+                    <h4 class="scanvix-nse-title">SSH Cipher Audit</h4>
+                    <p class="scanvix-nse-desc">Enumerates key exchange (KEX) algorithms and flags weak or deprecated cryptographic ciphers.</p>
+                </div>
+
+                <div class="scanvix-nse-card">
+                    <div class="scanvix-nse-tag">--script=http-headers</div>
+                    <h4 class="scanvix-nse-title">Security Headers</h4>
+                    <p class="scanvix-nse-desc">Inspects HTTP response headers to verify HSTS, CSP, and X-Content-Type protection.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== SECTION: SECURITY FINDINGS ========== -->
+    <section class="scanvix-section scanvix-section-alt" id="findings">
+        <div class="scanvix-container">
+            <div class="scanvix-section-header">
+                <div class="scanvix-section-tag">
+                    <i class="fa-solid fa-shield-virus"></i> Triage
+                </div>
+                <h2 class="scanvix-section-title">SECURITY FINDINGS</h2>
+                <p class="scanvix-section-desc">
+                    Automated rule engines transform raw scan observations into structured findings categorized across standard security severity levels.
+                </p>
+            </div>
+
+            <div class="scanvix-findings-grid">
+                <div class="scanvix-finding-card finding-high">
+                    <div class="scanvix-finding-pill"></div>
+                    <h3 class="scanvix-finding-name">High Severity</h3>
+                    <p class="scanvix-finding-desc">
+                        Cleartext administrative protocols (Telnet, unencrypted FTP), vulnerable software versions with known exploits, or exposed database ports without auth.
+                    </p>
+                </div>
+
+                <div class="scanvix-finding-card finding-medium">
+                    <div class="scanvix-finding-pill"></div>
+                    <h3 class="scanvix-finding-name">Medium Severity</h3>
+                    <p class="scanvix-finding-desc">
+                        Unencrypted HTTP web services without TLS certificates, weak SSH cryptographic key-exchange algorithms, or out-of-date web servers.
+                    </p>
+                </div>
+
+                <div class="scanvix-finding-card finding-low">
+                    <div class="scanvix-finding-pill"></div>
+                    <h3 class="scanvix-finding-name">Low Severity</h3>
+                    <p class="scanvix-finding-desc">
+                        Verbose service banner disclosure, missing security hardening headers, or non-standard port listeners with default configurations.
+                    </p>
+                </div>
+
+                <div class="scanvix-finding-card finding-info">
+                    <div class="scanvix-finding-pill"></div>
+                    <h3 class="scanvix-finding-name">Informational</h3>
+                    <p class="scanvix-finding-desc">
+                        Standard service inventory observations, verified SSH server availability, active DNS listeners, and baseline topology mapping.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== 6 FEATURE CARDS (BOTTOM OF REFERENCE IMAGE) ========== -->
+    <section class="scanvix-section" style="padding-top: 40px; padding-bottom: 60px;">
+        <div class="scanvix-container">
+            <div class="scanvix-features-bottom-grid">
+                
+                <div class="scanvix-feature-mini-card">
+                    <div class="scanvix-feature-mini-icon">
+                        <i class="fa-solid fa-network-wired"></i>
+                    </div>
+                    <h4 class="scanvix-feature-mini-title">Port Discovery</h4>
+                    <p class="scanvix-feature-mini-desc">Identify open, closed, filtered and other port states.</p>
+                </div>
+
+                <div class="scanvix-feature-mini-card">
+                    <div class="scanvix-feature-mini-icon">
+                        <i class="fa-solid fa-server"></i>
+                    </div>
+                    <h4 class="scanvix-feature-mini-title">Service Detection</h4>
+                    <p class="scanvix-feature-mini-desc">Detect services and versions running on open ports.</p>
+                </div>
+
+                <div class="scanvix-feature-mini-card">
+                    <div class="scanvix-feature-mini-icon">
+                        <i class="fa-solid fa-gear"></i>
+                    </div>
+                    <h4 class="scanvix-feature-mini-title">NSE Engine</h4>
+                    <p class="scanvix-feature-mini-desc">Powerful scripting engine for deeper insights.</p>
+                </div>
+
+                <div class="scanvix-feature-mini-card">
+                    <div class="scanvix-feature-mini-icon">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <h4 class="scanvix-feature-mini-title">Security Findings</h4>
+                    <p class="scanvix-feature-mini-desc">Turn observations into actionable security findings.</p>
+                </div>
+
+                <div class="scanvix-feature-mini-card">
+                    <div class="scanvix-feature-mini-icon">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                    </div>
+                    <h4 class="scanvix-feature-mini-title">Scan History</h4>
+                    <p class="scanvix-feature-mini-desc">Review, compare and track past assessments.</p>
+                </div>
+
+                <div class="scanvix-feature-mini-card">
+                    <div class="scanvix-feature-mini-icon">
+                        <i class="fa-solid fa-file-pdf"></i>
+                    </div>
+                    <h4 class="scanvix-feature-mini-title">PDF Reports</h4>
+                    <p class="scanvix-feature-mini-desc">Professional reports for security assessments.</p>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== FINAL CTA SECTION ========== -->
+    <section class="scanvix-cta-wrap">
+        <div class="scanvix-container">
+            <h2 class="scanvix-cta-title">SEE WHAT YOUR NETWORK REVEALS.</h2>
+            <p class="scanvix-cta-desc">
+                Explore ScanVix and turn authorized Nmap assessments into structured security intelligence.
+            </p>
+            <div>
+                {% if is_authenticated %}
+                <a href="{{ url_for('dashboard.dashboard_alias') }}" class="scanvix-btn-primary" style="font-size: 1.05rem; padding: 16px 36px;">
+                    <i class="fa-solid fa-rocket"></i> Launch ScanVix
+                </a>
+                {% else %}
+                <a href="{{ url_for('auth.login') }}" class="scanvix-btn-primary" style="font-size: 1.05rem; padding: 16px 36px;">
+                    <i class="fa-solid fa-rocket"></i> Launch ScanVix
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== FOOTER ========== -->
+    <footer class="scanvix-footer">
+        <div>&copy; 2026 ScanVix Security Suite. All rights reserved.</div>
+        <div class="scanvix-footer-disclaimer">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>Built for authorized security testing and educational purposes only.</span>
+        </div>
+    </footer>
+
+    <!-- ========== INTERACTIVE MODAL BACKDROP ========== -->
+    <div class="scanvix-modal-backdrop" id="scanvixModal">
+        <div class="scanvix-modal-box">
+            <button class="scanvix-modal-close-btn" id="modalCloseBtn">&times;</button>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+</div><!-- /.scanvix-landing -->
+
+<!-- Three.js CDN (Loaded strictly on public landing page) -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.min.js"></script>
+
+<!-- ScanVix 3D Interactive Cyber Engine -->
+<script src="{{ url_for('static', filename='js/landing-3d.js') }}"></script>
+
+</body>
+</html>

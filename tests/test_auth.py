@@ -96,13 +96,13 @@ def test_logout(client, auth_user):
     assert b'Security Portal Authentication' in logout_resp.data
 
     # Attempt accessing protected page after logout
-    dash_resp = client.get('/', follow_redirects=True)
+    dash_resp = client.get('/dashboard', follow_redirects=True)
     assert b'Please log in to access the security dashboard.' in dash_resp.data
 
 def test_protected_route_unauthenticated(client):
     """Test 8: Verify unauthenticated users are redirected to login."""
     protected_urls = [
-        '/',
+        '/dashboard',
         '/about',
         '/scan/new',
         '/scan/progress/1',
@@ -133,6 +133,7 @@ def test_protected_route_authenticated(client, auth_user, app):
 
     protected_urls = [
         '/',
+        '/dashboard',
         '/about',
         '/scan/new',
         '/scan/progress/1',

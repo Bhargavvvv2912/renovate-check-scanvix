@@ -98,7 +98,9 @@ def create_app(config_class=Config):
     from routes.findings import findings_bp
     from routes.reports import reports_bp
     from routes.authorized_targets import authorized_targets_bp
+    from routes.landing import landing_bp
 
+    app.register_blueprint(landing_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(scans_bp)

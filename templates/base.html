@@ -46,7 +46,7 @@
                 <div class="sidebar-section-title">SCANNING</div>
                 <ul class="sidebar-nav">
                     <li>
-                        <a class="sidebar-nav-link {% if request.path == '/' or request.path == '/dashboard' %}active{% endif %}" {% if request.path == '/' or request.path == '/dashboard' %}aria-current="page"{% endif %} href="{{ url_for('dashboard.index') }}" title="Dashboard">
+                        <a class="sidebar-nav-link {% if request.path == '/dashboard' %}active{% endif %}" {% if request.path == '/dashboard' %}aria-current="page"{% endif %} href="{{ url_for('dashboard.dashboard_alias') }}" title="Dashboard">
                             <i class="fa-solid fa-table-cells-large"></i>
                             <span>Dashboard</span>
                         </a>
@@ -261,7 +261,7 @@
                         <h2>An Error Occurred</h2>
                         <p class="text-secondary mt-2">{{ error_message }}</p>
                         <div>
-                            <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary mt-3">Return Dashboard</a>
+                            <a href="{{ url_for('dashboard.dashboard_alias') }}" class="btn btn-primary mt-3">Return Dashboard</a>
                         </div>
                     </div>
                 {% else %}

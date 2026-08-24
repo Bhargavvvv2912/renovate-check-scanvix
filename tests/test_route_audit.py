@@ -3,7 +3,7 @@ import pytest
 def test_unauthenticated_route_protection(client):
     """Audit all application endpoints for unauthenticated redirect protection."""
     routes = [
-        '/',
+        '/dashboard',
         '/scan/new',
         '/scan/progress/1',
         '/scan/results/1',
@@ -39,7 +39,7 @@ def test_authenticated_route_rendering(client, auth_user, app):
     })
 
     get_routes = [
-        ('/', b'NMAP', b'Dashboard'),
+        ('/dashboard', b'NMAP', b'Dashboard'),
         ('/scan/new', b'Configure Target', b'Validate Target'),
         ('/scan/progress/1', b'Active Assessment Scanner', b'Execution'),
         ('/scan/results/1', b'Assessment Results Summary', b'Execution Metadata'),

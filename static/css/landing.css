@@ -1,0 +1,1515 @@
+/* ==========================================================================
+   ScanVix Landing Page — Cyber 3D Scoped Design System
+   All rules scoped to .scanvix-landing / standalone reset.
+   ========================================================================== */
+
+/* ---------- Standalone Page Root Reset ---------- */
+html, body {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  min-height: 100vh !important;
+  background-color: #020817 !important;
+  color: #f1f5f9 !important;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  overflow-x: hidden !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box !important;
+}
+
+/* ---------- Scoped Variables & Container ---------- */
+.scanvix-landing {
+  --lp-bg-deep: #020817;
+  --lp-bg-navy: #06101f;
+  --lp-bg-card: rgba(8, 19, 39, 0.75);
+  --lp-bg-card-hover: rgba(13, 28, 56, 0.85);
+  --lp-bg-glass: rgba(14, 28, 54, 0.65);
+  --lp-bg-glass-bright: rgba(22, 43, 80, 0.75);
+
+  --lp-border-subtle: rgba(255, 255, 255, 0.08);
+  --lp-border-blue: rgba(59, 130, 246, 0.3);
+  --lp-border-cyan: rgba(56, 189, 248, 0.4);
+  --lp-border-glow: rgba(56, 189, 248, 0.6);
+  --lp-border-amber: rgba(245, 158, 11, 0.4);
+
+  --lp-text-primary: #f8fafc;
+  --lp-text-secondary: #94a3b8;
+  --lp-text-muted: #64748b;
+
+  --lp-cyan: #38bdf8;
+  --lp-cyan-bright: #00e5ff;
+  --lp-blue: #3b82f6;
+  --lp-blue-dark: #1d4ed8;
+  --lp-blue-glow: rgba(59, 130, 246, 0.35);
+  --lp-amber: #f59e0b;
+  --lp-orange: #f97316;
+  --lp-orange-glow: rgba(249, 115, 22, 0.4);
+  --lp-emerald: #10b981;
+  --lp-rose: #f43f5e;
+  --lp-violet: #8b5cf6;
+
+  --lp-radius-sm: 8px;
+  --lp-radius-md: 12px;
+  --lp-radius-lg: 16px;
+  --lp-radius-xl: 24px;
+  --lp-radius-pill: 9999px;
+
+  --lp-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --lp-shadow-glow: 0 0 25px rgba(56, 189, 248, 0.25);
+  --lp-shadow-orange: 0 0 25px rgba(249, 115, 22, 0.3);
+
+  background-color: var(--lp-bg-deep);
+  color: var(--lp-text-primary);
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Background Cyber Grid & Vignette */
+.scanvix-landing::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(56, 189, 248, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 189, 248, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-position: center center;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.scanvix-landing::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at 50% 30%, transparent 40%, rgba(2, 8, 23, 0.85) 90%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ---------- Top Navbar ---------- */
+.scanvix-landing .scanvix-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 72px;
+  padding: 0 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(2, 8, 23, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--lp-border-subtle);
+  z-index: 1000;
+  transition: var(--lp-transition);
+}
+
+.scanvix-landing .scanvix-nav.nav-scrolled {
+  background: rgba(2, 8, 23, 0.95);
+  border-bottom-color: var(--lp-border-blue);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+}
+
+.scanvix-landing .scanvix-nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+
+.scanvix-landing .scanvix-nav-brand-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--lp-radius-md);
+  background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 1.2rem;
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.scanvix-landing .scanvix-nav-brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.scanvix-landing .scanvix-nav-brand-name {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  line-height: 1.1;
+}
+
+.scanvix-landing .scanvix-nav-brand-sub {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--lp-text-muted);
+  text-transform: uppercase;
+}
+
+.scanvix-landing .scanvix-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.scanvix-landing .scanvix-nav-link {
+  padding: 8px 16px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--lp-text-secondary);
+  text-decoration: none;
+  border-radius: var(--lp-radius-sm);
+  transition: var(--lp-transition);
+  position: relative;
+}
+
+.scanvix-landing .scanvix-nav-link:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.scanvix-landing .scanvix-nav-link.active {
+  color: #ffffff;
+}
+
+.scanvix-landing .scanvix-nav-link.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 16px;
+  right: 16px;
+  height: 2px;
+  background: var(--lp-cyan);
+  box-shadow: 0 0 10px var(--lp-cyan);
+  border-radius: var(--lp-radius-pill);
+}
+
+.scanvix-landing .scanvix-nav-cta {
+  padding: 10px 22px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #ffffff;
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--lp-radius-sm);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: var(--lp-transition);
+  box-shadow: 0 4px 18px rgba(37, 99, 235, 0.4);
+}
+
+.scanvix-landing .scanvix-nav-cta:hover {
+  background: linear-gradient(135deg, #1d4ed8, #2563eb);
+  box-shadow: 0 6px 24px rgba(59, 130, 246, 0.6);
+  transform: translateY(-1px);
+  color: #ffffff;
+}
+
+/* ---------- Hero Section Layout ---------- */
+.scanvix-landing .scanvix-hero-section {
+  position: relative;
+  min-height: 100vh;
+  padding-top: 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  z-index: 1;
+}
+
+.scanvix-landing .scanvix-hero-container {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 40px 40px 20px;
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
+  gap: 40px;
+  align-items: center;
+  min-height: calc(100vh - 120px);
+}
+
+/* Hero Left Column */
+.scanvix-landing .scanvix-hero-left {
+  display: flex;
+  flex-direction: column;
+  z-index: 2;
+}
+
+.scanvix-landing .scanvix-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: rgba(30, 58, 138, 0.3);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: var(--lp-radius-pill);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--lp-cyan);
+  text-transform: uppercase;
+  margin-bottom: 24px;
+  width: fit-content;
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.15);
+}
+
+.scanvix-landing .scanvix-hero-title {
+  font-size: clamp(2.4rem, 4.2vw, 3.8rem);
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+  margin: 0 0 20px;
+  color: #ffffff;
+}
+
+.scanvix-landing .scanvix-text-gradient {
+  background: linear-gradient(135deg, #38bdf8 0%, #60a5fa 50%, #818cf8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: block;
+}
+
+.scanvix-landing .scanvix-hero-desc {
+  font-size: 1.08rem;
+  line-height: 1.7;
+  color: var(--lp-text-secondary);
+  margin: 0 0 32px;
+  max-width: 520px;
+}
+
+.scanvix-landing .scanvix-hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 48px;
+  flex-wrap: wrap;
+}
+
+.scanvix-landing .scanvix-btn-primary {
+  padding: 14px 28px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #ffffff;
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--lp-radius-md);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  transition: var(--lp-transition);
+  box-shadow: 0 4px 20px rgba(37, 99, 235, 0.4);
+  cursor: pointer;
+}
+
+.scanvix-landing .scanvix-btn-primary:hover {
+  background: linear-gradient(135deg, #1d4ed8, #2563eb);
+  box-shadow: 0 6px 28px rgba(59, 130, 246, 0.65);
+  transform: translateY(-2px);
+  color: #ffffff;
+}
+
+.scanvix-landing .scanvix-btn-glass {
+  padding: 14px 26px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--lp-text-primary);
+  background: var(--lp-bg-glass);
+  border: 1px solid var(--lp-border-subtle);
+  border-radius: var(--lp-radius-md);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: var(--lp-transition);
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+}
+
+.scanvix-landing .scanvix-btn-glass:hover {
+  background: var(--lp-bg-glass-bright);
+  border-color: var(--lp-border-blue);
+  transform: translateY(-2px);
+  color: #ffffff;
+}
+
+/* 4 Feature Badges in Hero Left */
+.scanvix-landing .scanvix-hero-badges-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  max-width: 580px;
+}
+
+.scanvix-landing .scanvix-badge-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: rgba(8, 19, 39, 0.6);
+  border: 1px solid var(--lp-border-subtle);
+  border-radius: var(--lp-radius-md);
+  backdrop-filter: blur(10px);
+  transition: var(--lp-transition);
+}
+
+.scanvix-landing .scanvix-badge-card:hover {
+  border-color: var(--lp-border-cyan);
+  background: rgba(14, 28, 54, 0.8);
+  transform: translateY(-2px);
+}
+
+.scanvix-landing .scanvix-badge-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--lp-cyan);
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.scanvix-landing .scanvix-badge-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.scanvix-landing .scanvix-badge-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.15;
+}
+
+.scanvix-landing .scanvix-badge-sub {
+  font-size: 0.68rem;
+  color: var(--lp-text-muted);
+  white-space: nowrap;
+}
+
+/* ---------- Hero Right: Interactive 3D Cyber Stage ---------- */
+.scanvix-landing .scanvix-hero-stage {
+  position: relative;
+  width: 100%;
+  height: 640px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 1200px;
+}
+
+.scanvix-landing .scanvix-3d-canvas-wrap {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  cursor: grab;
+}
+
+.scanvix-landing .scanvix-3d-canvas-wrap:active {
+  cursor: grabbing;
+}
+
+.scanvix-landing #scanvix3DCanvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Floating 3D Command Windows */
+.scanvix-landing .scanvix-cmd-win-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.scanvix-landing .scanvix-cmd-win {
+  position: absolute;
+  background: rgba(6, 16, 31, 0.82);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: var(--lp-radius-md);
+  padding: 14px 18px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.6), 0 0 15px rgba(56, 189, 248, 0.15);
+  pointer-events: auto;
+  cursor: pointer;
+  transition: all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transform-style: preserve-3d;
+  color: var(--lp-text-primary);
+  font-family: 'Inter', monospace;
+}
+
+.scanvix-landing .scanvix-cmd-win::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--lp-cyan), transparent);
+}
+
+.scanvix-landing .scanvix-cmd-win:hover {
+  border-color: var(--lp-cyan);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7), 0 0 25px rgba(56, 189, 248, 0.35);
+  transform: translateY(-4px) scale(1.03);
+}
+
+/* Command Window Top Bar */
+.scanvix-landing .scanvix-win-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.scanvix-landing .scanvix-win-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-family: 'Courier New', Courier, monospace;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.scanvix-landing .scanvix-win-close {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  color: var(--lp-text-muted);
+  transition: var(--lp-transition);
+}
+
+.scanvix-landing .scanvix-win-close:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Command Window Content */
+.scanvix-landing .scanvix-win-desc {
+  font-size: 0.78rem;
+  color: var(--lp-text-secondary);
+  line-height: 1.45;
+  margin-bottom: 8px;
+}
+
+.scanvix-landing .scanvix-win-desc strong {
+  color: #ffffff;
+  display: block;
+  font-size: 0.82rem;
+  margin-bottom: 2px;
+}
+
+.scanvix-landing .scanvix-win-code {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.74rem;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 6px 10px;
+  border-radius: var(--lp-radius-sm);
+  color: var(--lp-emerald);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.scanvix-landing .scanvix-win-code .prompt {
+  color: var(--lp-text-muted);
+}
+
+.scanvix-landing .scanvix-win-code .flag {
+  color: var(--lp-cyan);
+}
+
+.scanvix-landing .scanvix-win-code .target {
+  color: var(--lp-emerald);
+}
+
+/* Specific Positions for the 4 Windows */
+/* Window 1: nmap -sS (Top Center) */
+.scanvix-landing .win-syn {
+  top: 15px;
+  left: 28%;
+  width: 260px;
+}
+
+/* Window 2: nmap 192.168.1.10 (Large Terminal Center-Left) */
+.scanvix-landing .win-terminal {
+  top: 180px;
+  left: 0%;
+  width: 320px;
+  background: rgba(4, 12, 26, 0.9);
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
+.scanvix-landing .win-terminal .scanvix-terminal-table {
+  width: 100%;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.72rem;
+  border-collapse: collapse;
+  margin: 8px 0;
+  color: var(--lp-text-secondary);
+}
+
+.scanvix-landing .win-terminal .scanvix-terminal-table th {
+  color: var(--lp-cyan);
+  text-align: left;
+  padding: 2px 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.scanvix-landing .win-terminal .scanvix-terminal-table td {
+  padding: 2px 4px;
+}
+
+.scanvix-landing .win-terminal .port-open {
+  color: var(--lp-emerald);
+  font-weight: 600;
+}
+
+.scanvix-landing .win-terminal .port-link {
+  color: #ffffff;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: rgba(56, 189, 248, 0.4);
+}
+
+.scanvix-landing .win-terminal .port-link:hover {
+  color: var(--lp-cyan-bright);
+}
+
+/* Window 3: nmap -Pn (Top Right) */
+.scanvix-landing .win-pn {
+  top: 30px;
+  right: 2%;
+  width: 250px;
+}
+
+/* Window 4: nmap -A (Bottom Right) */
+.scanvix-landing .win-aggressive {
+  bottom: 80px;
+  right: 5%;
+  width: 270px;
+}
+
+/* Window Focus State (When Clicked) */
+.scanvix-landing .scanvix-cmd-win.is-focused {
+  position: absolute;
+  top: 50% !important;
+  left: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: translate(-50%, -50%) scale(1.18) !important;
+  z-index: 100 !important;
+  width: 380px !important;
+  background: rgba(3, 10, 24, 0.96) !important;
+  border-color: var(--lp-cyan-bright) !important;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 40px rgba(56, 189, 248, 0.5) !important;
+}
+
+.scanvix-landing .scanvix-cmd-win.is-dimmed {
+  opacity: 0.3;
+  filter: blur(1px);
+  pointer-events: none;
+}
+
+/* Stage Control Hint Bar */
+.scanvix-landing .scanvix-stage-hint {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 18px;
+  background: rgba(8, 19, 39, 0.75);
+  border: 1px solid var(--lp-border-subtle);
+  border-radius: var(--lp-radius-pill);
+  font-size: 0.75rem;
+  color: var(--lp-text-muted);
+  backdrop-filter: blur(10px);
+  z-index: 4;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.scanvix-landing .scanvix-stage-hint i {
+  color: var(--lp-cyan);
+}
+
+/* ---------- Common Section Layout ---------- */
+.scanvix-landing .scanvix-section {
+  position: relative;
+  padding: 100px 40px;
+  z-index: 1;
+}
+
+.scanvix-landing .scanvix-section-alt {
+  background: rgba(4, 12, 26, 0.6);
+}
+
+.scanvix-landing .scanvix-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.scanvix-landing .scanvix-section-header {
+  text-align: center;
+  max-width: 750px;
+  margin: 0 auto 56px;
+}
+
+.scanvix-landing .scanvix-section-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  background: rgba(30, 58, 138, 0.25);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: var(--lp-radius-pill);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--lp-cyan);
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.scanvix-landing .scanvix-section-title {
+  font-size: clamp(2rem, 3.2vw, 2.8rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: #ffffff;
+  margin: 0 0 16px;
+}
+
+.scanvix-landing .scanvix-section-desc {
+  font-size: 1.05rem;
+  color: var(--lp-text-secondary);
+  line-height: 1.7;
+  margin: 0;
+}
+
+/* ---------- Section: What is Nmap + 3D Shield Hologram ---------- */
+.scanvix-landing .scanvix-nmap-card {
+  background: var(--lp-bg-card);
+  border: 1px solid var(--lp-border-blue);
+  border-radius: var(--lp-radius-xl);
+  padding: 48px;
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 48px;
+  align-items: center;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  position: relative;
+  overflow: hidden;
+}
+
+.scanvix-landing .scanvix-nmap-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at 75% 50%, rgba(56, 189, 248, 0.08) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.scanvix-landing .scanvix-nmap-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.scanvix-landing .scanvix-nmap-visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  min-height: 260px;
+}
+
+/* 3D Holographic Shield Pedestal */
+.scanvix-landing .scanvix-shield-pedestal {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scanvix-landing .pedestal-base {
+  position: absolute;
+  bottom: 10px;
+  width: 180px;
+  height: 40px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(56, 189, 248, 0.4) 0%, rgba(37, 99, 235, 0.2) 60%, transparent 80%);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  box-shadow: 0 0 30px rgba(56, 189, 248, 0.4);
+  animation: scanvixPedestalPulse 3s ease-in-out infinite alternate;
+}
+
+.scanvix-landing .pedestal-ring-1 {
+  position: absolute;
+  bottom: 25px;
+  width: 140px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px dashed var(--lp-cyan);
+  animation: scanvixRotateRing 8s linear infinite;
+}
+
+.scanvix-landing .pedestal-ring-2 {
+  position: absolute;
+  bottom: 40px;
+  width: 100px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid rgba(59, 130, 246, 0.6);
+  animation: scanvixRotateRing 12s linear infinite reverse;
+}
+
+.scanvix-landing .shield-holo-icon {
+  font-size: 5rem;
+  color: var(--lp-cyan-bright);
+  filter: drop-shadow(0 0 20px rgba(56, 189, 248, 0.8));
+  animation: scanvixShieldFloat 4s ease-in-out infinite alternate;
+  z-index: 2;
+}
+
+@keyframes scanvixShieldFloat {
+  0% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 15px rgba(56, 189, 248, 0.6)); }
+  100% { transform: translateY(-12px) scale(1.05); filter: drop-shadow(0 0 30px rgba(56, 189, 248, 0.9)); }
+}
+
+@keyframes scanvixPedestalPulse {
+  0% { transform: scale(0.95); opacity: 0.7; }
+  100% { transform: scale(1.05); opacity: 1; }
+}
+
+@keyframes scanvixRotateRing {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ---------- Section: ScanVix 9-Step Workflow ---------- */
+.scanvix-landing .scanvix-workflow-wrap {
+  position: relative;
+  overflow-x: auto;
+  padding: 30px 10px;
+}
+
+.scanvix-landing .scanvix-workflow-track {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 1100px;
+  position: relative;
+}
+
+/* Connecting Laser Line with Data Flow Packet */
+.scanvix-landing .scanvix-workflow-laser {
+  position: absolute;
+  top: 40px;
+  left: 40px;
+  right: 40px;
+  height: 2px;
+  background: rgba(56, 189, 248, 0.15);
+  z-index: 1;
+}
+
+.scanvix-landing .scanvix-laser-packet {
+  position: absolute;
+  top: -4px;
+  width: 24px;
+  height: 10px;
+  background: var(--lp-cyan-bright);
+  border-radius: var(--lp-radius-pill);
+  box-shadow: 0 0 15px var(--lp-cyan-bright);
+  animation: scanvixPacketTravel 6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes scanvixPacketTravel {
+  0% { left: 0%; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { left: 98%; opacity: 0; }
+}
+
+.scanvix-landing .scanvix-step-card {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 110px;
+  cursor: pointer;
+  transition: var(--lp-transition);
+}
+
+.scanvix-landing .scanvix-step-card:hover {
+  transform: translateY(-6px);
+}
+
+.scanvix-landing .scanvix-step-icon-wrap {
+  width: 68px;
+  height: 68px;
+  border-radius: var(--lp-radius-md);
+  background: var(--lp-bg-card);
+  border: 1px solid var(--lp-border-blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  color: var(--lp-cyan);
+  margin-bottom: 12px;
+  transition: var(--lp-transition);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+.scanvix-landing .scanvix-step-card:hover .scanvix-step-icon-wrap,
+.scanvix-landing .scanvix-step-card.active .scanvix-step-icon-wrap {
+  border-color: var(--lp-cyan-bright);
+  background: rgba(14, 28, 54, 0.95);
+  box-shadow: 0 0 25px rgba(56, 189, 248, 0.4);
+  color: #ffffff;
+}
+
+.scanvix-landing .scanvix-step-num {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--lp-cyan);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 2px;
+}
+
+.scanvix-landing .scanvix-step-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 4px;
+}
+
+.scanvix-landing .scanvix-step-desc {
+  font-size: 0.72rem;
+  color: var(--lp-text-muted);
+  line-height: 1.3;
+}
+
+/* ---------- Section: Port Exploration & Port States ---------- */
+.scanvix-landing .scanvix-ports-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 16px;
+  margin-bottom: 48px;
+}
+
+.scanvix-landing .scanvix-port-tile {
+  background: var(--lp-bg-card);
+  border: 1px solid var(--lp-border-subtle);
+  border-radius: var(--lp-radius-lg);
+  padding: 24px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: var(--lp-transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.scanvix-landing .scanvix-port-tile::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--lp-cyan), transparent);
+  opacity: 0;
+  transition: var(--lp-transition);
+}
+
+.scanvix-landing .scanvix-port-tile:hover {
+  border-color: var(--lp-border-cyan);
+  background: var(--lp-bg-card-hover);
+  transform: translateY(-6px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(56, 189, 248, 0.2);
+}
+
+.scanvix-landing .scanvix-port-tile:hover::before {
+  opacity: 1;
+}
+
+.scanvix-landing .scanvix-port-num {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1;
+  margin-bottom: 6px;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.scanvix-landing .scanvix-port-svc {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--lp-cyan);
+  margin-bottom: 4px;
+}
+
+.scanvix-landing .scanvix-port-proto {
+  font-size: 0.7rem;
+  color: var(--lp-text-muted);
+  text-transform: uppercase;
+}
+
+/* Port States 3 Cards */
+.scanvix-landing .scanvix-port-states-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.scanvix-landing .scanvix-state-card {
+  background: var(--lp-bg-card);
+  border: 1px solid var(--lp-border-subtle);
+  border-radius: var(--lp-radius-xl);
+  padding: 32px;
+  transition: var(--lp-transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.scanvix-landing .scanvix-state-card:hover {
+  transform: translateY(-4px);
+}
+
+.scanvix-landing .state-open {
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+.scanvix-landing .state-open:hover {
+  border-color: var(--lp-cyan);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(56, 189, 248, 0.25);
+}
+
+.scanvix-landing .state-filtered {
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.scanvix-landing .state-filtered:hover {
+  border-color: var(--lp-amber);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(245, 158, 11, 0.25);
+}
+
+.scanvix-landing .state-closed {
+  border-color: rgba(148, 163, 184, 0.2);
+}
+
+.scanvix-landing .state-closed:hover {
+  border-color: #94a3b8;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+}
+
+.scanvix-landing .scanvix-state-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: var(--lp-radius-pill);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.scanvix-landing .state-open .scanvix-state-badge {
+  background: rgba(56, 189, 248, 0.15);
+  color: var(--lp-cyan);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.scanvix-landing .state-filtered .scanvix-state-badge {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--lp-amber);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.scanvix-landing .state-closed .scanvix-state-badge {
+  background: rgba(148, 163, 184, 0.15);
+  color: #94a3b8;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.scanvix-landing .scanvix-state-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 10px;
+}
+
+.scanvix-landing .scanvix-state-desc {
+  font-size: 0.9rem;
+  color: var(--lp-text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ---------- Section: Service Detection Pipeline ---------- */
+.scanvix-landing .scanvix-pipeline-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: center;
+}
+
+.scanvix-landing .scanvix-pipeline-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.scanvix-landing .scanvix-pipe-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: var(--lp-bg-card);
+  border: 1px solid var(--lp-border-subtle);
+  border-radius: var(--lp-radius-md);
+  transition: var(--lp-transition);
+}
+
+.scanvix-landing .scanvix-pipe-row:hover {
+  border-color: var(--lp-border-cyan);
+  background: var(--lp-bg-card-hover);
+  transform: translateX(6px);
+}
+
+.scanvix-landing .scanvix-pipe-badge {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--lp-radius-sm);
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--lp-cyan);
+  font-size: 0.95rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.scanvix-landing .scanvix-pipe-text h4 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 2px;
+}
+
+.scanvix-landing .scanvix-pipe-text p {
+  font-size: 0.8rem;
+  color: var(--lp-text-secondary);
+  margin: 0;
+}
+
+.scanvix-landing .scanvix-pipe-terminal {
+  background: rgba(2, 8, 23, 0.9);
+  border: 1px solid var(--lp-border-cyan);
+  border-radius: var(--lp-radius-lg);
+  padding: 24px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.82rem;
+  line-height: 1.7;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(56, 189, 248, 0.15);
+}
+
+/* ---------- Section: NSE Engine ---------- */
+.scanvix-landing .scanvix-nse-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.scanvix-landing .scanvix-nse-card {
+  background: var(--lp-bg-card);
+  border: 1px solid var(--lp-border-subtle);
+  border-radius: var(--lp-radius-lg);
+  padding: 24px;
+  transition: var(--lp-transition);
+}
+
+.scanvix-landing .scanvix-nse-card:hover {
+  border-color: var(--lp-border-cyan);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5);
+}
+
+.scanvix-landing .scanvix-nse-tag {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--lp-cyan);
+  margin-bottom: 8px;
+}
+
+.scanvix-landing .scanvix-nse-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 6px;
+}
+
+.scanvix-landing .scanvix-nse-desc {
+  font-size: 0.82rem;
+  color: var(--lp-text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ---------- Section: Security Findings ---------- */
+.scanvix-landing .scanvix-findings-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.scanvix-landing .scanvix-finding-card {
+  background: var(--lp-bg-card);
+  border: 1px solid var(--lp-border-subtle);
+  border-radius: var(--lp-radius-lg);
+  padding: 28px 24px;
+  text-align: center;
+  transition: var(--lp-transition);
+}
+
+.scanvix-landing .scanvix-finding-card:hover {
+  transform: translateY(-4px);
+}
+
+.scanvix-landing .finding-high { border-color: rgba(239, 68, 68, 0.3); }
+.scanvix-landing .finding-high:hover { border-color: var(--lp-rose); box-shadow: 0 0 25px rgba(244, 63, 94, 0.3); }
+
+.scanvix-landing .finding-medium { border-color: rgba(245, 158, 11, 0.3); }
+.scanvix-landing .finding-medium:hover { border-color: var(--lp-amber); box-shadow: 0 0 25px rgba(245, 158, 11, 0.3); }
+
+.scanvix-landing .finding-low { border-color: rgba(234, 179, 8, 0.3); }
+.scanvix-landing .finding-low:hover { border-color: #eab308; box-shadow: 0 0 25px rgba(234, 179, 8, 0.3); }
+
+.scanvix-landing .finding-info { border-color: rgba(59, 130, 246, 0.3); }
+.scanvix-landing .finding-info:hover { border-color: var(--lp-blue); box-shadow: 0 0 25px rgba(59, 130, 246, 0.3); }
+
+.scanvix-landing .scanvix-finding-pill {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  margin: 0 auto 14px;
+}
+
+.scanvix-landing .finding-high .scanvix-finding-pill { background: #ef4444; box-shadow: 0 0 15px #ef4444; }
+.scanvix-landing .finding-medium .scanvix-finding-pill { background: #f59e0b; box-shadow: 0 0 15px #f59e0b; }
+.scanvix-landing .finding-low .scanvix-finding-pill { background: #eab308; box-shadow: 0 0 15px #eab308; }
+.scanvix-landing .finding-info .scanvix-finding-pill { background: #3b82f6; box-shadow: 0 0 15px #3b82f6; }
+
+.scanvix-landing .scanvix-finding-name {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 8px;
+}
+
+.scanvix-landing .scanvix-finding-desc {
+  font-size: 0.82rem;
+  color: var(--lp-text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ---------- 6 Feature Cards (Matching Reference Image Bottom) ---------- */
+.scanvix-landing .scanvix-features-bottom-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 16px;
+  margin-top: 40px;
+}
+
+.scanvix-landing .scanvix-feature-mini-card {
+  background: var(--lp-bg-card);
+  border: 1px solid var(--lp-border-subtle);
+  border-radius: var(--lp-radius-lg);
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: var(--lp-transition);
+}
+
+.scanvix-landing .scanvix-feature-mini-card:hover {
+  border-color: var(--lp-border-cyan);
+  background: var(--lp-bg-card-hover);
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+}
+
+.scanvix-landing .scanvix-feature-mini-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--lp-radius-sm);
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--lp-cyan);
+  font-size: 1rem;
+}
+
+.scanvix-landing .scanvix-feature-mini-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+}
+
+.scanvix-landing .scanvix-feature-mini-desc {
+  font-size: 0.74rem;
+  color: var(--lp-text-muted);
+  line-height: 1.45;
+  margin: 0;
+}
+
+/* ---------- Final CTA Section ---------- */
+.scanvix-landing .scanvix-cta-wrap {
+  text-align: center;
+  padding: 90px 40px;
+  background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(30, 58, 138, 0.25) 0%, transparent 70%);
+  border-top: 1px solid var(--lp-border-subtle);
+  position: relative;
+}
+
+.scanvix-landing .scanvix-cta-title {
+  font-size: clamp(2rem, 3.5vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  margin: 0 0 16px;
+}
+
+.scanvix-landing .scanvix-cta-desc {
+  font-size: 1.1rem;
+  color: var(--lp-text-secondary);
+  max-width: 580px;
+  margin: 0 auto 36px;
+  line-height: 1.7;
+}
+
+/* ---------- Footer ---------- */
+.scanvix-landing .scanvix-footer {
+  padding: 32px 40px;
+  border-top: 1px solid var(--lp-border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--lp-text-muted);
+  background: rgba(2, 8, 23, 0.95);
+  position: relative;
+  z-index: 10;
+}
+
+.scanvix-landing .scanvix-footer-disclaimer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.scanvix-landing .scanvix-footer-disclaimer i {
+  color: var(--lp-emerald);
+}
+
+/* ---------- Interactive Modals (Port & Step Details) ---------- */
+.scanvix-landing .scanvix-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 8, 23, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.scanvix-landing .scanvix-modal-backdrop.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.scanvix-landing .scanvix-modal-box {
+  background: rgba(6, 16, 35, 0.95);
+  border: 1px solid var(--lp-border-cyan);
+  border-radius: var(--lp-radius-xl);
+  padding: 36px;
+  max-width: 540px;
+  width: 100%;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.8), 0 0 40px rgba(56, 189, 248, 0.35);
+  transform: translateY(20px) scale(0.95);
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  position: relative;
+}
+
+.scanvix-landing .scanvix-modal-backdrop.is-open .scanvix-modal-box {
+  transform: translateY(0) scale(1);
+}
+
+.scanvix-landing .scanvix-modal-close-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--lp-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: var(--lp-transition);
+}
+
+.scanvix-landing .scanvix-modal-close-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* ---------- Responsive Breakpoints ---------- */
+@media (max-width: 1200px) {
+  .scanvix-landing .scanvix-hero-container {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .scanvix-landing .scanvix-hero-stage {
+    height: 540px;
+  }
+
+  .scanvix-landing .scanvix-features-bottom-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .scanvix-landing .scanvix-ports-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .scanvix-landing .scanvix-nse-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .scanvix-landing .scanvix-nav-links {
+    display: none;
+  }
+
+  .scanvix-landing .scanvix-nmap-card {
+    grid-template-columns: 1fr;
+  }
+
+  .scanvix-landing .scanvix-pipeline-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .scanvix-landing .scanvix-port-states-row {
+    grid-template-columns: 1fr;
+  }
+
+  .scanvix-landing .scanvix-findings-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .scanvix-landing .scanvix-hero-badges-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .scanvix-landing .scanvix-nav {
+    padding: 0 20px;
+  }
+
+  .scanvix-landing .scanvix-hero-container {
+    padding: 20px 20px;
+  }
+
+  .scanvix-landing .scanvix-section {
+    padding: 60px 20px;
+  }
+
+  .scanvix-landing .scanvix-ports-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .scanvix-landing .scanvix-features-bottom-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .scanvix-landing .scanvix-findings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .scanvix-landing .scanvix-footer {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .scanvix-landing *,
+  .scanvix-landing *::before,
+  .scanvix-landing *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

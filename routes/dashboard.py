@@ -209,11 +209,7 @@ def get_dashboard_data():
         'services_detected_list': []
     }
 
-@dashboard_bp.route('/')
-@login_required
-def index():
-    dashboard_data = get_dashboard_data()
-    return render_template('dashboard.html', data=dashboard_data)
+
 
 @dashboard_bp.route('/api/dashboard/stats')
 @login_required
@@ -242,7 +238,8 @@ def settings():
 @dashboard_bp.route('/dashboard')
 @login_required
 def dashboard_alias():
-    return redirect(url_for('dashboard.index'))
+    dashboard_data = get_dashboard_data()
+    return render_template('dashboard.html', data=dashboard_data)
 
 @dashboard_bp.route('/services')
 @login_required
