@@ -1,7 +1,7 @@
 import os
 import logging
 from datetime import datetime
-from flask import Blueprint, render_template, request, jsonify, current_app, redirect, url_for, flash, Response, abort
+from flask import Blueprint, render_template, request, jsonify, current_app, redirect, url_for, flash, Response, abort, send_file
 from flask_login import login_required, current_user
 
 from models import db, Scan, Host, Port, NSEResult, Finding
@@ -18,6 +18,7 @@ from services.nmap_service import (
     ScanProfileError
 )
 from services.parser import validate_xml_file, XMLSecurityError
+from services.report_generator import generate_pdf_report
 
 logger = logging.getLogger(__name__)
 scans_bp = Blueprint('scans', __name__)
@@ -792,6 +793,52 @@ def scan_results(scan_id):
         findings_low=findings_low,
         findings_info=findings_info,
         scan_stats=scan_stats
+    )
+
+
+# ---------------------------------------------------------------------------
+#  API: Generate PDF Report
+# ---------------------------------------------------------------------------
+@scans_bp.route('/api/scans/<int:scan_id>/report/pdf', methods=['GET'])
+@login_required
+def api_generate_pdf_report(scan_id):
+    """Generates and returns the PDF security assessment report for a scan."""
+    scan = db.session.get(Scan, scan_id)
+    if not scan:
+        return jsonify({"error": "Scan not found"}), 404
+
+    if scan.user_id != current_user.id:
+        logger.warning(f"Unauthorized PDF report access to scan #{scan_id} by user {current_user.username}")
+        return jsonify({"error": "Unauthorized access to scan."}), 403
+
+    if scan.status != 'completed':
+        return jsonify({"error": "Scan must be completed to generate a report."}), 400
+
+    report, error_msg = generate_pdf_report(scan.id)
+    
+    if error_msg:
+        return jsonify({"error": error_msg}), 500
+        
+    if not report or not report.file_path:
+        return jsonify({"error": "Report generation failed unexpectedly."}), 500
+        
+    # Construct absolute path if it is relative
+    file_path = report.file_path
+    if not os.path.isabs(file_path):
+        file_path = os.path.join(current_app.root_path, file_path)
+        
+    if not os.path.exists(file_path):
+        return jsonify({"error": "Report file not found on disk."}), 500
+        
+    date_str = scan.start_time.strftime('%Y-%m-%d') if scan.start_time else datetime.utcnow().strftime('%Y-%m-%d')
+    safe_target = scan.target.replace('/', '_').replace('\\', '_')
+    download_name = f"ScanVix_Security_Assessment_{safe_target}_{date_str}.pdf"
+    
+    return send_file(
+        file_path,
+        mimetype='application/pdf',
+        as_attachment=True,
+        download_name=download_name
     )
 
 

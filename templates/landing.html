@@ -255,7 +255,7 @@
 
     <!-- ========== SECTION: WHAT IS NMAP? ========== -->
     <section class="scanvix-section" id="nmap">
-        <div class="scanvix-container">
+        <div class="scanvix-container anim-up">
             <div class="scanvix-nmap-card">
                 <div class="scanvix-nmap-info">
                     <div class="scanvix-section-tag">
@@ -289,7 +289,7 @@
 
     <!-- ========== SECTION: SCANVIX 9-STEP WORKFLOW ========== -->
     <section class="scanvix-section scanvix-section-alt" id="workflow">
-        <div class="scanvix-container">
+        <div class="scanvix-container anim-up">
             <div class="scanvix-section-header">
                 <div class="scanvix-section-tag">
                     <i class="fa-solid fa-diagram-project"></i> Pipeline
@@ -320,7 +320,7 @@
                     <!-- Step 2 -->
                     <div class="scanvix-step-card" data-step="2">
                         <div class="scanvix-step-icon-wrap">
-                            <i class="fa-solid fa-shield-check"></i>
+                            <i class="fa-solid fa-shield-halved"></i>
                         </div>
                         <span class="scanvix-step-num">Step 02</span>
                         <span class="scanvix-step-name">Validation</span>
@@ -404,7 +404,7 @@
 
     <!-- ========== SECTION: UNDERSTAND THE PORT & PORT STATES ========== -->
     <section class="scanvix-section" id="ports">
-        <div class="scanvix-container">
+        <div class="scanvix-container anim-up">
             <div class="scanvix-section-header">
                 <div class="scanvix-section-tag">
                     <i class="fa-solid fa-ethernet"></i> Endpoints
@@ -497,7 +497,7 @@
 
     <!-- ========== SECTION: SERVICE DETECTION ========== -->
     <section class="scanvix-section scanvix-section-alt" id="services">
-        <div class="scanvix-container">
+        <div class="scanvix-container anim-up">
             <div class="scanvix-section-header">
                 <div class="scanvix-section-tag">
                     <i class="fa-solid fa-network-wired"></i> Intelligence
@@ -563,7 +563,7 @@
 
     <!-- ========== SECTION: NSE SCRIPTING ENGINE ========== -->
     <section class="scanvix-section" id="nse">
-        <div class="scanvix-container">
+        <div class="scanvix-container anim-up">
             <div class="scanvix-section-header">
                 <div class="scanvix-section-tag">
                     <i class="fa-solid fa-code"></i> Extensibility
@@ -604,7 +604,7 @@
 
     <!-- ========== SECTION: SECURITY FINDINGS ========== -->
     <section class="scanvix-section scanvix-section-alt" id="findings">
-        <div class="scanvix-container">
+        <div class="scanvix-container anim-up">
             <div class="scanvix-section-header">
                 <div class="scanvix-section-tag">
                     <i class="fa-solid fa-shield-virus"></i> Triage
@@ -653,7 +653,7 @@
 
     <!-- ========== 6 FEATURE CARDS (BOTTOM OF REFERENCE IMAGE) ========== -->
     <section class="scanvix-section" style="padding-top: 40px; padding-bottom: 60px;">
-        <div class="scanvix-container">
+        <div class="scanvix-container anim-up">
             <div class="scanvix-features-bottom-grid">
                 
                 <div class="scanvix-feature-mini-card">
@@ -710,7 +710,7 @@
 
     <!-- ========== FINAL CTA SECTION ========== -->
     <section class="scanvix-cta-wrap">
-        <div class="scanvix-container">
+        <div class="scanvix-container anim-up">
             <h2 class="scanvix-cta-title">SEE WHAT YOUR NETWORK REVEALS.</h2>
             <p class="scanvix-cta-desc">
                 Explore ScanVix and turn authorized Nmap assessments into structured security intelligence.
@@ -748,11 +748,18 @@
 
 </div><!-- /.scanvix-landing -->
 
-<!-- Three.js CDN (Loaded strictly on public landing page) -->
-<script src="https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.min.js"></script>
+<!-- Three.js Import Map (Loaded strictly on public landing page) -->
+<script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"
+    }
+  }
+</script>
 
 <!-- ScanVix 3D Interactive Cyber Engine -->
-<script src="{{ url_for('static', filename='js/landing-3d.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/landing-3d.js') }}"></script>
 
 </body>
 </html>
