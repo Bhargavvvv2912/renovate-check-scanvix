@@ -13,8 +13,8 @@ import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer
   // 1. Core Scene Setup
   const scene = new THREE.Scene();
   
-  const camera = new THREE.PerspectiveCamera(45, canvasWrap.clientWidth / canvasWrap.clientHeight, 1, 3000);
-  camera.position.set(0, 50, 750);
+  const camera = new THREE.PerspectiveCamera(45, canvasWrap.clientWidth / canvasWrap.clientHeight, 1, 8000);
+  camera.position.set(0, 150, 1200);
 
   // 2. WebGL Renderer
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -29,25 +29,87 @@ import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer
   cssRenderer.setSize(canvasWrap.clientWidth, canvasWrap.clientHeight);
   cssRenderer.domElement.style.position = 'absolute';
   cssRenderer.domElement.style.top = '0px';
-  cssRenderer.domElement.style.pointerEvents = 'none'; // Let mouse pass through empty space
+  cssRenderer.domElement.style.pointerEvents = 'auto'; // Immediate 1-click drag interaction
   cssRenderer.domElement.style.zIndex = '2';
   canvasWrap.appendChild(cssRenderer.domElement);
   
-  // Make CSS children clickable
+  // Make CSS children clickable and default cursor grab
+  canvasWrap.style.cursor = 'grab';
+  cssRenderer.domElement.style.cursor = 'grab';
   const style = document.createElement('style');
-  style.textContent = `.scanvix-cmd-win { pointer-events: auto; }`;
+  style.textContent = `
+    .scanvix-cmd-win { pointer-events: auto; }
+    .scanvix-3d-canvas-wrap { cursor: grab; }
+    .scanvix-3d-canvas-wrap:active { cursor: grabbing; }
+  `;
   document.head.appendChild(style);
 
-  // 4. Orbit Controls
+  // 4. Orbit Controls (Standard, Robust 3D Camera Controls)
   const controls = new OrbitControls(camera, cssRenderer.domElement);
   controls.enableDamping = true;
-  controls.dampingFactor = 0.05;
-  controls.maxDistance = 1000;
-  controls.minDistance = 400;
-  controls.minAzimuthAngle = -45 * Math.PI / 180;
-  controls.maxAzimuthAngle = 45 * Math.PI / 180;
-  controls.minPolarAngle = Math.PI / 2 - (30 * Math.PI / 180);
-  controls.maxPolarAngle = Math.PI / 2 + (30 * Math.PI / 180);
+  controls.dampingFactor = 0.08;
+  controls.enableRotate = true;
+  controls.rotateSpeed = 0.85;
+  controls.enableZoom = true;
+  controls.zoomSpeed = 1.0;
+  controls.enablePan = false;
+  
+  // Extended zoom limits
+  controls.minDistance = 250;
+  controls.maxDistance = 3500;
+
+  // Full 360° horizontal rotation (unrestricted)
+  controls.minAzimuthAngle = -Infinity;
+  controls.maxAzimuthAngle = Infinity;
+
+  // Controlled vertical tilt: 35° to 145° (approx -55° to +55° from horizontal)
+  controls.minPolarAngle = (35 * Math.PI) / 180;
+  controls.maxPolarAngle = (145 * Math.PI) / 180;
+
+  controls.target.set(0, 0, 0);
+
+  controls.mouseButtons = {
+    LEFT: THREE.MOUSE.ROTATE,
+    MIDDLE: THREE.MOUSE.DOLLY,
+    RIGHT: THREE.MOUSE.NONE
+  };
+  controls.touches = {
+    ONE: THREE.TOUCH.ROTATE,
+    TWO: THREE.TOUCH.DOLLY_PAN
+  };
+
+  controls.addEventListener('start', () => {
+    canvasWrap.style.cursor = 'grabbing';
+    cssRenderer.domElement.style.cursor = 'grabbing';
+  });
+
+  controls.addEventListener('end', () => {
+    canvasWrap.style.cursor = 'grab';
+    cssRenderer.domElement.style.cursor = 'grab';
+  });
+
+  // Smooth double-click camera reset
+  let isResettingCamera = false;
+  let resetStartTime = 0;
+  const resetDuration = 600;
+  const resetStartCamPos = new THREE.Vector3();
+  const resetStartTarget = new THREE.Vector3();
+  const defaultCamPos = new THREE.Vector3(0, 150, 1200);
+  const defaultTarget = new THREE.Vector3(0, 0, 0);
+
+  function resetCameraView() {
+    isResettingCamera = true;
+    resetStartTime = performance.now();
+    resetStartCamPos.copy(camera.position);
+    resetStartTarget.copy(controls.target);
+    if (typeof unfocusAll === 'function') unfocusAll();
+  }
+
+  cssRenderer.domElement.addEventListener('dblclick', (e) => {
+    if (!e.target.closest('.scanvix-cmd-win')) {
+      resetCameraView();
+    }
+  });
 
   // 5. Lighting
   const ambientLight = new THREE.AmbientLight(0x020817, 1);
@@ -92,18 +154,18 @@ import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer
   const tier3Geo = new THREE.CylinderGeometry(180, 180, 5, 64);
   const tier3Mat = new THREE.MeshPhongMaterial({ color: 0x020611, specular: 0x38bdf8, shininess: 150 });
   const tier3 = new THREE.Mesh(tier3Geo, tier3Mat);
-  tier3.position.y = 0;
+  tier3.position.y = -10;
   radarSystem.add(tier3);
   
   // Concentric Rings
   const ringMaterial = new THREE.MeshBasicMaterial({ color: 0x38bdf8, side: THREE.DoubleSide, transparent: true, opacity: 0.3 });
   const glowMaterial = new THREE.MeshBasicMaterial({ color: 0x38bdf8, side: THREE.DoubleSide, transparent: true, opacity: 0.8 });
   
-  [60, 100, 140, 185].forEach((radius, i) => {
+  [60, 100, 140, 175].forEach((radius, i) => {
     const ringGeo = new THREE.RingGeometry(radius, radius + 1.5, 64);
     const ring = new THREE.Mesh(ringGeo, i === 3 ? glowMaterial : ringMaterial);
     ring.rotation.x = -Math.PI / 2;
-    ring.position.y = 3;
+    ring.position.y = -7;
     radarSystem.add(ring);
   });
 
@@ -111,17 +173,17 @@ import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer
   const sweepGroup = new THREE.Group();
   radarSystem.add(sweepGroup);
   
-  const sweepGeo = new THREE.CircleGeometry(185, 32, 0, Math.PI / 3);
+  const sweepGeo = new THREE.CircleGeometry(175, 32, 0, Math.PI / 3);
   const sweepMat = new THREE.MeshBasicMaterial({ color: 0xf97316, side: THREE.DoubleSide, transparent: true, opacity: 0.25 });
   const sweep = new THREE.Mesh(sweepGeo, sweepMat);
   sweep.rotation.x = -Math.PI / 2;
-  sweep.position.y = 3.5;
+  sweep.position.y = -6.5;
   sweepGroup.add(sweep);
 
-  const sweepLineGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(185,0,0)]);
+  const sweepLineGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(175,0,0)]);
   const sweepLineMat = new THREE.LineBasicMaterial({ color: 0xff9900, linewidth: 2 });
   const sweepLine = new THREE.Line(sweepLineGeo, sweepLineMat);
-  sweepLine.position.y = 3.6;
+  sweepLine.position.y = -6.4;
   sweepGroup.add(sweepLine);
 
   // 7. Network Particles
@@ -137,6 +199,7 @@ import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer
   scannerRoot.add(particles);
 
   // 8. Integrate CSS3D Terminals
+  let unfocusAll = () => {};
   const cssLayer = document.querySelector('.scanvix-cmd-win-layer');
   if (cssLayer) {
     const terminals = cssLayer.querySelectorAll('.scanvix-cmd-win');
@@ -150,14 +213,14 @@ import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer
     // 4: nmap -sV (lower-left)
     // 5: nmap -p- (lower/mid background)
     const positions = [
-      { x: 0,    y: 145, z: -80, rotY: 0 },              // 0: sS (top center)
-      { x: 0,    y: 105, z: 70,  rotY: 0 },              // 1: Main (front center)
-      { x: 200,  y: 125, z: -20, rotY: -Math.PI / 12 },  // 2: Pn (right)
-      { x: 260,  y: 110, z: -60, rotY: -Math.PI / 10 },  // 3: A (far right)
-      { x: -200, y: 125, z: -20, rotY: Math.PI / 12 },   // 4: sV (left)
-      { x: -260, y: 110, z: -60, rotY: Math.PI / 10 }    // 5: p- (far left)
+      { x: -350, y: 150, z: 80, rotY: Math.PI / 8 },   // syn (upper-left)
+      { x: 0, y: 110, z: 180, rotY: 0 },               // terminal (front-center)
+      { x: 350, y: 140, z: 50, rotY: -Math.PI / 8 },   // pn (upper-right)
+      { x: 380, y: 90, z: -100, rotY: -Math.PI / 10 }, // aggressive (right background)
+      { x: -360, y: 80, z: -80, rotY: Math.PI / 10 },  // sV (left background)
+      { x: 50, y: 200, z: -150, rotY: 0 }              // p- (upper center background)
     ];
-    
+
     terminals.forEach((term, index) => {
       // Create CSS3DObject
       const cssObj = new CSS3DObject(term);
@@ -177,7 +240,7 @@ import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer
       // Store original transform to restore on unfocus
       term.userData = { origPos: cssObj.position.clone(), origRot: cssObj.rotation.clone(), obj: cssObj };
       
-      // Hover effects via JS since CSS hover conflicts with OrbitControls sometimes
+      // Hover effects
       term.addEventListener('mouseenter', () => {
         if(!term.classList.contains('is-focused')) {
           cssObj.scale.set(1.03, 1.03, 1.03);
@@ -189,6 +252,14 @@ import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer
         }
       });
       
+      // Distinguish click vs drag
+      let termDownX = 0;
+      let termDownY = 0;
+      term.addEventListener('pointerdown', (e) => {
+        termDownX = e.clientX;
+        termDownY = e.clientY;
+      });
+
       // Focus interaction
       term.addEventListener('click', (e) => {
         if (e.target.closest('.scanvix-win-close')) {
@@ -196,11 +267,15 @@ import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer
             unfocusAll();
             return;
         }
+
+        const dist = Math.hypot(e.clientX - termDownX, e.clientY - termDownY);
+        if (dist > 6) {
+          // It was a drag rotation, not a click
+          return;
+        }
+
         unfocusAll();
         term.classList.add('is-focused');
-        
-        // Bring to front (relative to camera)
-        // Scale to 1.1 to keep it inside the composition safe area
         cssObj.scale.set(1.1, 1.1, 1.1);
         
         terminals.forEach(other => {
@@ -209,14 +284,24 @@ import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer
       });
     });
     
-    // Unfocus when clicking outside
+    // Unfocus when clicking empty space without dragging
+    let emptyDownX = 0;
+    let emptyDownY = 0;
+    cssRenderer.domElement.addEventListener('pointerdown', (e) => {
+      emptyDownX = e.clientX;
+      emptyDownY = e.clientY;
+    });
+
     cssRenderer.domElement.addEventListener('click', (e) => {
       if(!e.target.closest('.scanvix-cmd-win')) {
+        const dist = Math.hypot(e.clientX - emptyDownX, e.clientY - emptyDownY);
+        if (dist < 6) {
           unfocusAll();
+        }
       }
     });
     
-    function unfocusAll() {
+    unfocusAll = function() {
       terminals.forEach(term => {
           term.classList.remove('is-focused');
           term.classList.remove('is-dimmed');
@@ -224,7 +309,7 @@ import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer
               term.userData.obj.scale.set(1, 1, 1);
           }
       });
-    }
+    };
   }
 
   // 9. Resize Handler
@@ -246,21 +331,43 @@ import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer
     const delta = clock.getDelta();
     const time = clock.getElapsedTime();
     
-    controls.update();
+    // Smooth camera reset interpolation or normal controls damping
+    if (isResettingCamera) {
+      const elapsed = performance.now() - resetStartTime;
+      const progress = Math.min(elapsed / resetDuration, 1);
+      const ease = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+      camera.position.lerpVectors(resetStartCamPos, defaultCamPos, ease);
+      controls.target.lerpVectors(resetStartTarget, defaultTarget, ease);
+      controls.update();
+      if (progress >= 1) {
+        isResettingCamera = false;
+      }
+    } else {
+      controls.update();
+    }
     
     // Continuous Independent Animations
-    radarSystem.rotation.y += delta * 0.2; // Slow rotation of radar
-    sweepGroup.rotation.y -= delta * 1.5;  // Fast orange sweep rotation
-    commandOrbit.rotation.y += delta * 0.05; // Very slow orbit of terminals
+    radarSystem.rotation.y += delta * 0.25; // Slow rotation of radar
+    sweepGroup.rotation.y -= delta * 1.6;   // Fast orange sweep rotation
+    commandOrbit.rotation.y += delta * 0.04; // Very slow orbit of terminals
     
     // Subtle Platform Bob (very small amplitude)
     platformGroup.position.y = Math.sin(time) * 4;
     
-    // Terminals static Y to enforce shallow planar composition
-    // Floating removed based on requirements.
+    // Terminals small floating
+    const cssLayer = document.querySelector('.scanvix-cmd-win-layer');
+    if (cssLayer) {
+        const terminals = cssLayer.querySelectorAll('.scanvix-cmd-win');
+        terminals.forEach((term, index) => {
+            if (term.userData && term.userData.obj && !term.classList.contains('is-focused')) {
+                // Add a small individual float based on index
+                term.userData.obj.position.y = term.userData.origPos.y + Math.sin(time * 1.5 + index) * 5;
+            }
+        });
+    }
     
     // Particles slow rotate
-    particles.rotation.y += delta * 0.1;
+    particles.rotation.y += delta * 0.08;
 
     renderer.render(scene, camera);
     cssRenderer.render(scene, camera);
