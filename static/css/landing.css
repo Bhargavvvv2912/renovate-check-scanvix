@@ -416,6 +416,7 @@ html, body {
   align-items: center;
   justify-content: center;
   perspective: 1200px;
+  overflow: hidden;
 }
 
 .scanvix-landing .scanvix-3d-canvas-wrap {
@@ -617,6 +618,16 @@ html, body {
   bottom: 80px;
   right: 5%;
   width: 270px;
+}
+
+/* Window 5: nmap -sV (Bottom Left) */
+.scanvix-landing .win-sv {
+  width: 260px;
+}
+
+/* Window 6: nmap -p- (Bottom Center) */
+.scanvix-landing .win-allports {
+  width: 250px;
 }
 
 /* Window Focus State (When Clicked) */

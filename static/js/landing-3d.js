@@ -14,7 +14,7 @@ import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer
   const scene = new THREE.Scene();
   
   const camera = new THREE.PerspectiveCamera(45, canvasWrap.clientWidth / canvasWrap.clientHeight, 1, 3000);
-  camera.position.set(0, 400, 1000);
+  camera.position.set(0, 50, 750);
 
   // 2. WebGL Renderer
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -42,9 +42,12 @@ import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer
   const controls = new OrbitControls(camera, cssRenderer.domElement);
   controls.enableDamping = true;
   controls.dampingFactor = 0.05;
-  controls.maxDistance = 1800;
+  controls.maxDistance = 1000;
   controls.minDistance = 400;
-  controls.maxPolarAngle = Math.PI / 2 + 0.1; // Don't let camera go below ground
+  controls.minAzimuthAngle = -45 * Math.PI / 180;
+  controls.maxAzimuthAngle = 45 * Math.PI / 180;
+  controls.minPolarAngle = Math.PI / 2 - (30 * Math.PI / 180);
+  controls.maxPolarAngle = Math.PI / 2 + (30 * Math.PI / 180);
 
   // 5. Lighting
   const ambientLight = new THREE.AmbientLight(0x020817, 1);
@@ -58,9 +61,18 @@ import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer
   orangeLight.position.set(0, 50, 0);
   scene.add(orangeLight);
 
-  // 6. Build the 3D Platform
+  // 6. Build the 3D Hierarchy
+  const scannerRoot = new THREE.Group();
+  scene.add(scannerRoot);
+
   const platformGroup = new THREE.Group();
-  scene.add(platformGroup);
+  scannerRoot.add(platformGroup);
+
+  const radarSystem = new THREE.Group();
+  scannerRoot.add(radarSystem);
+  
+  const commandOrbit = new THREE.Group();
+  scannerRoot.add(commandOrbit);
 
   // Tier 1 (Base)
   const tier1Geo = new THREE.CylinderGeometry(300, 320, 20, 64);
@@ -80,36 +92,36 @@ import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer
   const tier3Geo = new THREE.CylinderGeometry(180, 180, 5, 64);
   const tier3Mat = new THREE.MeshPhongMaterial({ color: 0x020611, specular: 0x38bdf8, shininess: 150 });
   const tier3 = new THREE.Mesh(tier3Geo, tier3Mat);
-  tier3.position.y = -10;
-  platformGroup.add(tier3);
+  tier3.position.y = 0;
+  radarSystem.add(tier3);
   
   // Concentric Rings
   const ringMaterial = new THREE.MeshBasicMaterial({ color: 0x38bdf8, side: THREE.DoubleSide, transparent: true, opacity: 0.3 });
   const glowMaterial = new THREE.MeshBasicMaterial({ color: 0x38bdf8, side: THREE.DoubleSide, transparent: true, opacity: 0.8 });
   
-  [60, 100, 140, 175].forEach((radius, i) => {
+  [60, 100, 140, 185].forEach((radius, i) => {
     const ringGeo = new THREE.RingGeometry(radius, radius + 1.5, 64);
     const ring = new THREE.Mesh(ringGeo, i === 3 ? glowMaterial : ringMaterial);
     ring.rotation.x = -Math.PI / 2;
-    ring.position.y = -7;
-    platformGroup.add(ring);
+    ring.position.y = 3;
+    radarSystem.add(ring);
   });
 
   // Radar Sweep Beam
   const sweepGroup = new THREE.Group();
-  platformGroup.add(sweepGroup);
+  radarSystem.add(sweepGroup);
   
-  const sweepGeo = new THREE.CircleGeometry(175, 32, 0, Math.PI / 3);
+  const sweepGeo = new THREE.CircleGeometry(185, 32, 0, Math.PI / 3);
   const sweepMat = new THREE.MeshBasicMaterial({ color: 0xf97316, side: THREE.DoubleSide, transparent: true, opacity: 0.25 });
   const sweep = new THREE.Mesh(sweepGeo, sweepMat);
   sweep.rotation.x = -Math.PI / 2;
-  sweep.position.y = -6.5;
+  sweep.position.y = 3.5;
   sweepGroup.add(sweep);
 
-  const sweepLineGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(175,0,0)]);
+  const sweepLineGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(185,0,0)]);
   const sweepLineMat = new THREE.LineBasicMaterial({ color: 0xff9900, linewidth: 2 });
   const sweepLine = new THREE.Line(sweepLineGeo, sweepLineMat);
-  sweepLine.position.y = -6.4;
+  sweepLine.position.y = 3.6;
   sweepGroup.add(sweepLine);
 
   // 7. Network Particles
@@ -122,7 +134,7 @@ import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer
   particlesGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
   const particleMat = new THREE.PointsMaterial({ size: 4, color: 0x38bdf8, transparent: true, opacity: 0.6 });
   const particles = new THREE.Points(particlesGeo, particleMat);
-  scene.add(particles);
+  scannerRoot.add(particles);
 
   // 8. Integrate CSS3D Terminals
   const cssLayer = document.querySelector('.scanvix-cmd-win-layer');
@@ -130,11 +142,20 @@ import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer
     const terminals = cssLayer.querySelectorAll('.scanvix-cmd-win');
     
     // Positions in 3D Space (x, y, z)
+    // Order matches DOM elements: 
+    // 0: nmap -sS (upper-left)
+    // 1: main terminal (center/front)
+    // 2: nmap -Pn (upper-right)
+    // 3: nmap -A (lower-right)
+    // 4: nmap -sV (lower-left)
+    // 5: nmap -p- (lower/mid background)
     const positions = [
-      { x: 0, y: 150, z: -300, rotY: 0 }, // syn
-      { x: -350, y: 50, z: 0, rotY: Math.PI / 6 }, // terminal
-      { x: 300, y: 120, z: -200, rotY: -Math.PI / 8 }, // pn
-      { x: 350, y: -20, z: 200, rotY: -Math.PI / 6 } // aggressive
+      { x: 0,    y: 145, z: -80, rotY: 0 },              // 0: sS (top center)
+      { x: 0,    y: 105, z: 70,  rotY: 0 },              // 1: Main (front center)
+      { x: 200,  y: 125, z: -20, rotY: -Math.PI / 12 },  // 2: Pn (right)
+      { x: 260,  y: 110, z: -60, rotY: -Math.PI / 10 },  // 3: A (far right)
+      { x: -200, y: 125, z: -20, rotY: Math.PI / 12 },   // 4: sV (left)
+      { x: -260, y: 110, z: -60, rotY: Math.PI / 10 }    // 5: p- (far left)
     ];
     
     terminals.forEach((term, index) => {
@@ -151,7 +172,7 @@ import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer
       term.style.bottom = 'auto';
       term.style.position = 'relative';
       
-      scene.add(cssObj);
+      commandOrbit.add(cssObj);
       
       // Store original transform to restore on unfocus
       term.userData = { origPos: cssObj.position.clone(), origRot: cssObj.rotation.clone(), obj: cssObj };
@@ -159,7 +180,7 @@ import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer
       // Hover effects via JS since CSS hover conflicts with OrbitControls sometimes
       term.addEventListener('mouseenter', () => {
         if(!term.classList.contains('is-focused')) {
-          cssObj.scale.set(1.05, 1.05, 1.05);
+          cssObj.scale.set(1.03, 1.03, 1.03);
         }
       });
       term.addEventListener('mouseleave', () => {
@@ -179,8 +200,8 @@ import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer
         term.classList.add('is-focused');
         
         // Bring to front (relative to camera)
-        // Instead of actually moving it to camera, we just scale it up and let user see it
-        cssObj.scale.set(1.3, 1.3, 1.3);
+        // Scale to 1.1 to keep it inside the composition safe area
+        cssObj.scale.set(1.1, 1.1, 1.1);
         
         terminals.forEach(other => {
             if (other !== term) other.classList.add('is-dimmed');
@@ -227,11 +248,16 @@ import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer
     
     controls.update();
     
-    // Rotate Sweep
-    sweepGroup.rotation.y -= delta * 1.5;
+    // Continuous Independent Animations
+    radarSystem.rotation.y += delta * 0.2; // Slow rotation of radar
+    sweepGroup.rotation.y -= delta * 1.5;  // Fast orange sweep rotation
+    commandOrbit.rotation.y += delta * 0.05; // Very slow orbit of terminals
     
-    // Subtle Platform Bob
-    platformGroup.position.y = Math.sin(time) * 5;
+    // Subtle Platform Bob (very small amplitude)
+    platformGroup.position.y = Math.sin(time) * 4;
+    
+    // Terminals static Y to enforce shallow planar composition
+    // Floating removed based on requirements.
     
     // Particles slow rotate
     particles.rotation.y += delta * 0.1;
