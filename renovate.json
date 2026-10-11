@@ -15,5 +15,8 @@
     "managerFilePatterns": [
       "/^requirements\\.txt$/"
     ]
-  }
+  },
+  "includePaths": [
+    "requirements.txt"
+  ]
 }
